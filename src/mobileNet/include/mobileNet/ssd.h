@@ -37,6 +37,7 @@ public:
                                                  vector<float> sizes, vector<float> ratios,
                                                  int step, float offset);
 
+
 public:
     ssdParams params;
     std::vector<std::vector<float> > layers_anchors;
