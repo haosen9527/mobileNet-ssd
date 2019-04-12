@@ -82,5 +82,14 @@ anchor_struct ssd::ssd_anchor_one_layers(int image_shape,int feat_shape,
     return anchor_one_layer;
 }
 
+void ssd::tf_ssd_bboxes_encode()
+{
+
 }
+void ssd::tf_ssd_bboxes_encode_layer()
+{
+
+}
+
+}//namespace ssd
 

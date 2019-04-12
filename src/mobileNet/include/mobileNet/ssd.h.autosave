@@ -46,6 +46,7 @@ public:
     void tf_ssd_bboxes_encode();
     void tf_ssd_bboxes_encode_layer();
     /* Smooth absolute function*/
+    Output abs_smooth();
 
 public:
     ssdParams params;
