@@ -25,4 +25,24 @@ int main()
     Tensor inputs = Tensor(DT_FLOAT,{1,300,300,3});
     inputs.flat<float>().setRandom();
     mobile_net.BatchNorm(inputs);
+
+    ssd::ssd test;
+    ssd::Tensor1f test1f(20);
+    for(int i=0;i<20;i++)
+    {
+        test1f(i) = i;
+    }
+    test.inline_test.oneF = test1f;
+    std::cout<<test.inline_test.oneF<<std::endl;
+
+    std::vector<std::vector<int> > test_vector = {{1,2,3},{4,5,6},{7,8}};
+    std::vector<int> test_inline;
+    for (int i=0;i<test_vector.size();i++)
+    {
+        test_inline=test_vector[i];
+    }
+    for(int j=0;j<test_inline.size();j++)
+    {
+        std::cout<<test_inline[j];
+    }
 }

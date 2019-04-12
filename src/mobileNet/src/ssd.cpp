@@ -15,11 +15,18 @@ void ssd::network()
 {
 }
 
-vector<vector<float> > ssd::ssd_anchors_all_layers()
+vector<anchor_struct> ssd::ssd_anchors_all_layers(int image_shape,int feat_shape,
+                                                  vector<vector<float> > anchor_sizes,vector<vector<float> > anchor_ratios,
+                                                  vector<int> anchor_step,float offset)
 {
-    //
+    vector<anchor_struct> result;
+    for(int i = 0;i<feat_shape;i++)
+    {
+        result.push_back(ssd_anchor_one_layers(image_shape,feat_shape,anchor_sizes[i],anchor_ratios[i],anchor_step[i],offset));
+    }
+    return result;
 }
-vector<vector<float> > ssd::ssd_anchor_one_layers(int image_shape,int feat_shape,
+anchor_struct ssd::ssd_anchor_one_layers(int image_shape,int feat_shape,
                                                  vector<float> sizes,vector<float> ratios,
                                                  int step,float offset)
 {
@@ -65,12 +72,14 @@ vector<vector<float> > ssd::ssd_anchor_one_layers(int image_shape,int feat_shape
         h(i+di) = sizes[0]/image_shape/sqrt(ratios[i]);
         w(i+di) = sizes[0]/image_shape*sqrt(ratios[i]);
     }
+    anchor_struct anchor_one_layer;
 
-    return_result result;
-    result.oneF = h;
-    result.threeF = y;
+    x = anchor_one_layer.anchor_x;
+    y = anchor_one_layer.anchor_y;
+    h = anchor_one_layer.anchor_height;
+    h = anchor_one_layer.anchor_width;
 
-
+    return anchor_one_layer;
 }
 
 }

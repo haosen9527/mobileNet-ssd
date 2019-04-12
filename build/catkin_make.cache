@@ -1,0 +1,2 @@
+mobileNet
+-DCATKIN_DEVEL_PREFIX=/home/micros/QT_pro/gitpro/mobileNet-ssd/devel -DCMAKE_INSTALL_PREFIX=/home/micros/QT_pro/gitpro/mobileNet-ssd/install -G Unix Makefiles

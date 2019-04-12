@@ -62,6 +62,7 @@ target_link_libraries(${PROJECT_NAME}_ssd
 add_executable(${PROJECT_NAME}_test
     src/mobileNet.cpp
     src/mobilenet_test.cpp
+    src/ssd.cpp
 )
 
 target_link_libraries(${PROJECT_NAME}_test

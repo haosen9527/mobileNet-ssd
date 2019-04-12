@@ -36,6 +36,7 @@ public:
     anchor_struct ssd_anchor_one_layers(int image_shape, int feat_shape,
                                                  vector<float> sizes, vector<float> ratios,
                                                  int step, float offset);
+    
 
 public:
     ssdParams params;
