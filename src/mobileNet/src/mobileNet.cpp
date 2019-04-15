@@ -1,5 +1,5 @@
 #include "mobileNet/mobileNet.h"
-
+namespace ssd {
 
 mobileNet::mobileNet(const Scope &scope):scope(scope),session(scope)
 {
@@ -127,3 +127,4 @@ void mobileNet::network(float alpha =1.0,int depth_multiplier=1,
 
 }
 
+}//namespace ssd

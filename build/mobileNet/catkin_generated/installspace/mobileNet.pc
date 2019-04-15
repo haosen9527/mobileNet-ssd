@@ -1,8 +1,0 @@
-prefix=/home/micros/QT_pro/gitpro/mobileNet-ssd/install
-
-Name: mobileNet
-Description: Description of mobileNet
-Version: 0.0.0
-Cflags: -I/home/micros/QT_pro/gitpro/mobileNet-ssd/install/include
-Libs: -L/home/micros/QT_pro/gitpro/mobileNet-ssd/install/lib 
-Requires: 

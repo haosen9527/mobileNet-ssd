@@ -6,19 +6,19 @@
 #include <tensorflow/cc/client/client_session.h>
 #include <tensorflow/core/framework/tensor.h>
 
-
+using namespace tensorflow;
 int main()
 {
     mobileNetConfig mcfg;
 
     tensorflow::Scope scope = tensorflow::Scope::NewRootScope();
-    ClientSession session(scope);
+    tensorflow::ClientSession session(scope);
 
 
     ssd::Tensor1f f(10);
     f.setRandom();
     std::cout<<"f"<<f<<std::endl;
-    mobileNet mobile_net(scope);
+    ssd::mobileNet mobile_net(scope);
     std::cout<<mcfg.alpha<<std::endl;
    // mobile_net.network(mcfg.alpha,mcfg.depth_multiplier,mcfg.dropout,mcfg.include_top,mcfg.weights,mcfg.num_classes,"SAME");
 
@@ -26,7 +26,7 @@ int main()
     inputs.flat<float>().setRandom();
     mobile_net.BatchNorm(inputs);
 
-    ssd::ssd test;
+    ssd::ssd test(scope);
     ssd::Tensor1f test1f(20);
     for(int i=0;i<20;i++)
     {

@@ -1,3 +1,6 @@
+#ifndef MOBILENET_H
+#define MOBILENET_H
+
 #include <iostream>
 #include <vector>
 #include <string>
@@ -6,6 +9,8 @@
 #include <tensorflow/cc/ops/standard_ops.h>
 #include <tensorflow/core/platform/net.h>
 #include <tensorflow/cc/training/queue_runner.h>
+
+namespace ssd {
 
 using namespace tensorflow;
 using namespace tensorflow::ops;
@@ -75,3 +80,6 @@ public:
   Output weight;
   Output biases;
 };
+}//namespace ssd
+
+#endif
