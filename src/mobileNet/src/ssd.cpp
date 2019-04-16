@@ -171,7 +171,76 @@ bboxes_struct ssd::tf_ssd_bboxes_encode_layer(vector<int> labels,vector<float> b
     auto scores = ops::Div(scope,inter_vol,vol_anchors);
 
     ///condition
-    //auto ops::Less(scope,);
+    int i =0;
+    bool condition;
+    if(i<labels.size())
+    {
+        condition = true;
+    }
+    else
+    {
+        condition = false;
+    }
+
+    ///
+//    def body(i, feat_labels, feat_scores,                 #该函数大致意思是选择与gt box IOU最大的锚点框负责回归任务，并预测对应的边界框，如此循环
+//                 feat_ymin, feat_xmin, feat_ymax, feat_xmax):
+//            """Body: update feature labels, scores and bboxes.
+//            Follow the original SSD paper for that purpose:
+//              - assign values when jaccard > 0.5;
+//              - only update if beat the score of other bboxes.
+//            """
+//            # Jaccard score.                                         #计算bbox与参考框的IOU值
+//            label = labels[i]
+//            bbox = bboxes[i]
+//            jaccard = jaccard_with_anchors(bbox)
+//            # Mask: check threshold + scores + no annotations + num_classes.
+//            mask = tf.greater(jaccard, feat_scores)                  #当IOU大于feat_scores时，对应的mask至1，做筛选
+//            # mask = tf.logical_and(mask, tf.greater(jaccard, matching_threshold))
+//            mask = tf.logical_and(mask, feat_scores > -0.5)
+//            mask = tf.logical_and(mask, label < num_classes)         #label满足<21
+//            imask = tf.cast(mask, tf.int64)                          #将mask转换数据类型int型
+//            fmask = tf.cast(mask, dtype)                             #将mask转换数据类型float型
+//            # Update values using mask.
+//            feat_labels = imask * label + (1 - imask) * feat_labels  #当mask=1，则feat_labels=1；否则为0，即背景
+//            feat_scores = tf.where(mask, jaccard, feat_scores)       #tf.where表示如果mask为真则jaccard，否则为feat_scores
+
+//            feat_ymin = fmask * bbox[0] + (1 - fmask) * feat_ymin    #选择与GT bbox IOU最大的框作为GT bbox，然后循环
+//            feat_xmin = fmask * bbox[1] + (1 - fmask) * feat_xmin
+//            feat_ymax = fmask * bbox[2] + (1 - fmask) * feat_ymax
+//            feat_xmax = fmask * bbox[3] + (1 - fmask) * feat_xmax
+
+//            # Check no annotation label: ignore these anchors...     #对没有标注标签的锚点框做忽视，应该是背景
+//            # interscts = intersection_with_anchors(bbox)
+//            # mask = tf.logical_and(interscts > ignore_threshold,
+//            #                       label == no_annotation_label)
+//            # # Replace scores by -1.
+//            # feat_scores = tf.where(mask, -tf.cast(mask, dtype), feat_scores)
+
+//            return [i+1, feat_labels, feat_scores,
+//                    feat_ymin, feat_xmin, feat_ymax, feat_xmax]
+//        # Main loop definition.
+//        i = 0
+//        [i, feat_labels, feat_scores,
+//         feat_ymin, feat_xmin,
+//         feat_ymax, feat_xmax] = tf.while_loop(condition, body,
+//                                               [i, feat_labels, feat_scores,
+//                                                feat_ymin, feat_xmin,
+//                                                feat_ymax, feat_xmax])
+//        # Transform to center / size.                               #转换为中心及长宽形式（计算补偿后的中心）
+//        feat_cy = (feat_ymax + feat_ymin) / 2.  #真实预测值其实是边界框相对于先验框的转换值，encode就是为了求这个转换值
+//        feat_cx = (feat_xmax + feat_xmin) / 2.
+//        feat_h = feat_ymax - feat_ymin
+//        feat_w = feat_xmax - feat_xmin
+//        # Encode features.
+//        feat_cy = (feat_cy - yref) / href / prior_scaling[0]   #(预测真实边界框中心y-参考框中心y)/参考框高/缩放尺度
+//        feat_cx = (feat_cx - xref) / wref / prior_scaling[1]
+//        feat_h = tf.log(feat_h / href) / prior_scaling[2]      #log(预测真实边界框高h/参考框高h)/缩放尺度
+//        feat_w = tf.log(feat_w / wref) / prior_scaling[3]
+//        # Use SSD ordering: x / y / w / h instead of ours.
+//        feat_localizations = tf.stack([feat_cx, feat_cy, feat_w, feat_h], axis=-1)  #返回（cx转换值,cy转换值,w转换值,h转换值）形式的边界框的预测值（其实是预测框相对于参考框的转换）
+//        return feat_labels, feat_localizations, feat_scores                         #返回目标标签，目标预测值（位置转换值），目标置信度
+//        #经过我们回归得到的变换，经过变换得到真实框，所以这个地方损失函数其实是我们预测的是变换，我们实际的框和anchor之间的变换和我们预测的变换之间的loss。我们回归的是一种变换。并不是直接预测框，这个和YOLO是不一样的。和Faster RCNN是一样的
 
 }
 Output ssd::abs_smooth(Input x)
