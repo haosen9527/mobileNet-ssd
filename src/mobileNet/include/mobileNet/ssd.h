@@ -24,6 +24,11 @@ struct anchor_struct
     Tensor3f anchor_x,anchor_y;
 };
 
+struct bboxes_struct
+{
+    Tensor t_labels, t_loc, t_scores;
+};
+
 using namespace std;
 using namespace tensorflow;
 using namespace tensorflow::ops;
@@ -47,9 +52,13 @@ public:
                                                  int step, float offset);
 
     /* SSD Anchors GT ? */
-    void tf_ssd_bboxes_encode(vector<int> labels, vector<float> bboxes,vector<float> anchors, int num_classes,
+    vector<bboxes_struct> tf_ssd_bboxes_encode(vector<int> labels, vector<float> bboxes, vector<anchor_struct> anchors, int num_classes,
                               float ignore_threshold = 0.5, vector<float> prior_scaling = {0.1,0.1,0.2,0.2});
-    void tf_ssd_bboxes_encode_layer();
+
+    bboxes_struct tf_ssd_bboxes_encode_layer(vector<int> labels, vector<float> bboxes, anchor_struct anchors_layer, int num_classes,
+                                             float ignore_threshold = 0.5, vector<float> prior_scaling = {0.1,0.1,0.2,0.2});
+
+    Tensor jaccard_with_anchors();
 
     /* SSD losses*/
     void ssdLosses(vector<float> logits, Tensor localisations, Tensor gclasses,
