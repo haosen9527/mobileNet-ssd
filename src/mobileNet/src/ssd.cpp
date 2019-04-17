@@ -293,10 +293,12 @@ bboxes_struct ssd::tf_ssd_bboxes_encode_layer(vector<int> labels,vector<float> b
     session.Run({feat_cy,feat_cx,feat_h,feat_w},&run_feat_xx);
 
     auto feat_localizations = ops::Stack(scope,{run_feat_xx[0],run_feat_xx[1],run_feat_xx[2],run_feat_xx[3]});
+    vector<Tensor> t_loc;
+    session.Run({feat_localizations},&t_loc);
 
     bboxes_struct bboxes_struct_;
     bboxes_struct_.t_labels = feat_labels;
-    //bboxes_struct_.t_loc = feat_localizations;
+    bboxes_struct_.t_loc = t_loc[0];
     bboxes_struct_.t_scores = feat_scores;
 
     return bboxes_struct_;
