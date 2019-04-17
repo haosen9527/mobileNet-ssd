@@ -55,7 +55,7 @@ public:
     vector<bboxes_struct> tf_ssd_bboxes_encode(vector<int> labels, vector<float> bboxes, vector<anchor_struct> anchors, int num_classes,
                               float ignore_threshold = 0.5, vector<float> prior_scaling = {0.1,0.1,0.2,0.2});
 
-    bboxes_struct tf_ssd_bboxes_encode_layer(vector<int> labels, vector<float> bboxes, anchor_struct anchors_layer, int num_classes,
+    bboxes_struct tf_ssd_bboxes_encode_layer(vector<int> labels,vector<float> bboxes,anchor_struct anchors_layer, int num_classes,
                                              float ignore_threshold = 0.5, vector<float> prior_scaling = {0.1,0.1,0.2,0.2});
 
     Tensor jaccard_with_anchors();

@@ -171,77 +171,135 @@ bboxes_struct ssd::tf_ssd_bboxes_encode_layer(vector<int> labels,vector<float> b
     auto scores = ops::Div(scope,inter_vol,vol_anchors);
 
     ///condition
-    int i =0;
     bool condition;
-    if(i<labels.size())
+    int flag =0;
+
+    /// #该函数大致意思是选择与gt box IOU最大的锚点框负责回归任务，并预测对应的边界框，如此循环
+    for(int i = 0;i < labels.size();i++)
     {
-        condition = true;
+        if(i<labels.size())
+        {
+            condition = true;
+        }
+        else
+        {
+            condition = false;
+        }
+
+        if(condition)
+        {
+            flag++;
+            float label = labels[i];
+            float bbox = bboxes[i];
+
+            Tensor Label = Tensor(DT_FLOAT,feat_scores.shape());
+            Label.flat<float>().setValues({label});
+
+            Tensor Bbox0 = Tensor(DT_FLOAT,feat_scores.shape());
+            Bbox0.flat<float>().setValues({bboxes[0]});
+            Tensor Bbox1 = Tensor(DT_FLOAT,feat_scores.shape());
+            Bbox1.flat<float>().setValues({bboxes[1]});
+            Tensor Bbox2 = Tensor(DT_FLOAT,feat_scores.shape());
+            Bbox2.flat<float>().setValues({bboxes[2]});
+            Tensor Bbox3 = Tensor(DT_FLOAT,feat_scores.shape());
+            Bbox3.flat<float>().setValues({bboxes[3]});
+
+            Tensor const_1 = Tensor(DT_FLOAT,feat_scores.shape());
+            const_1.flat<float>().setValues({1});
+
+            Tensor temp_var = Tensor(DT_FLOAT,feat_scores.shape());
+            temp_var.flat<float>().setValues({-0.5});
+
+            Tensor temp_label = Tensor(DT_BOOL,feat_scores.shape());
+            temp_label.flat<bool>().setValues({label<(float)num_classes});
+
+            auto var_mask = ops::LogicalAnd(scope,ops::Greater(scope,jaccard,feat_scores),ops::Less(scope,temp_var,feat_scores));
+            auto mask = ops::LogicalAnd(scope,var_mask,temp_label);
+            auto imask =ops::Cast(scope,mask,DT_INT64);
+            auto fmask = ops::Cast(scope,mask,DT_FLOAT);
+            vector<Tensor> run_imask;
+            session.Run({mask,imask,fmask},&run_imask);
+
+            //feat_labels = run_imask[0].tensor<int,3>()*label+(1-run_imask[1].tensor<int,3>());
+            auto new_feat_labels = ops::Add(scope,ops::Multiply(scope,ops::Subtract(scope,const_1,imask),feat_labels),ops::Multiply(scope,imask,Label));//#当mask=1，则feat_labels=1；否则为0，即背景
+            auto new_feat_scores = ops::Where3(scope,mask,jaccard,feat_scores);//#tf.where表示如果mask为真则jaccard，否则为feat_score
+            vector<Tensor> new_feat;
+            session.Run({new_feat_labels,new_feat_scores},&new_feat);
+            feat_labels  = new_feat[0];
+            feat_scores  = new_feat[1];
+
+            auto temp_feat_ymin = ops::Add(scope,ops::Multiply(scope,fmask,Bbox0),ops::Multiply(scope,ops::Subtract(scope,const_1,fmask),fmask));
+            auto temp_feat_ymax = ops::Add(scope,ops::Multiply(scope,fmask,Bbox1),ops::Multiply(scope,ops::Subtract(scope,const_1,fmask),fmask));
+            auto temp_feat_xmin = ops::Add(scope,ops::Multiply(scope,fmask,Bbox2),ops::Multiply(scope,ops::Subtract(scope,const_1,fmask),fmask));
+            auto temp_feat_xmax = ops::Add(scope,ops::Multiply(scope,fmask,Bbox3),ops::Multiply(scope,ops::Subtract(scope,const_1,fmask),fmask));
+            vector<Tensor> run_feat;
+            session.Run({temp_feat_ymin,temp_feat_ymax,temp_feat_xmin,temp_feat_xmax},&run_feat);
+            feat_ymin = run_feat[0];
+            feat_ymax = run_feat[1];
+            feat_xmin = run_feat[2];
+            feat_xmax = run_feat[3];
+        }
+
     }
-    else
+    //Main function
+    //Transform to center / size. #转换为中心及长宽形式（计算补偿后的中心）
+    Tensor const_2 = Tensor(DT_FLOAT,feat_ymin.shape());
+    const_2.tensor<float,3>();
+
+    auto _feat_cy = ops::Div(scope,ops::Add(scope,feat_ymax,feat_ymin),const_2);
+    auto _feat_cx = ops::Div(scope,ops::Add(scope,feat_xmax,feat_xmin),const_2);
+    auto _feat_h = ops::Subtract(scope,feat_ymax,feat_ymin);
+    auto _feat_w = ops::Subtract(scope,feat_xmax,feat_xmin);
+
+    Tensor yref = Tensor(DT_FLOAT,{anchors_layer.anchor_y.dimension(0),anchors_layer.anchor_y.dimension(1),anchors_layer.anchor_height.dimension(0)});
+    auto assgin_yref = yref.tensor<float,3>();
+    Tensor xref = Tensor(DT_FLOAT,{anchors_layer.anchor_x.dimension(0),anchors_layer.anchor_x.dimension(1),anchors_layer.anchor_width.dimension(0)});
+    auto assgin_xref = xref.tensor<float,3>();
+
+    Tensor href = Tensor(DT_FLOAT,{anchors_layer.anchor_y.dimension(0),anchors_layer.anchor_y.dimension(1),anchors_layer.anchor_height.dimension(0)});
+    auto assgin_href = href.tensor<float,3>();
+    Tensor wref = Tensor(DT_FLOAT,{anchors_layer.anchor_y.dimension(0),anchors_layer.anchor_y.dimension(1),anchors_layer.anchor_width.dimension(0)});
+    auto assgin_wref = wref.tensor<float,3>();
+
+    for(int i = 0;i<anchors_layer.anchor_y.dimension(0);i++)
     {
-        condition = false;
+        for(int j=0 ;j<anchors_layer.anchor_y.dimension(1);j++)
+        {
+            for(int k=0;k<anchors_layer.anchor_height.dimension(0);k++)
+            {
+                assgin_yref(i,j,k) = anchors_layer.anchor_y(i,j,1);
+                assgin_xref(i,j,k) = anchors_layer.anchor_x(i,j,1);
+                assgin_href(i,j,k) = anchors_layer.anchor_height(i);
+                assgin_wref(i,j,k) = anchors_layer.anchor_width(i);
+            }
+        }
     }
 
-    ///
-//    def body(i, feat_labels, feat_scores,                 #该函数大致意思是选择与gt box IOU最大的锚点框负责回归任务，并预测对应的边界框，如此循环
-//                 feat_ymin, feat_xmin, feat_ymax, feat_xmax):
-//            """Body: update feature labels, scores and bboxes.
-//            Follow the original SSD paper for that purpose:
-//              - assign values when jaccard > 0.5;
-//              - only update if beat the score of other bboxes.
-//            """
-//            # Jaccard score.                                         #计算bbox与参考框的IOU值
-//            label = labels[i]
-//            bbox = bboxes[i]
-//            jaccard = jaccard_with_anchors(bbox)
-//            # Mask: check threshold + scores + no annotations + num_classes.
-//            mask = tf.greater(jaccard, feat_scores)                  #当IOU大于feat_scores时，对应的mask至1，做筛选
-//            # mask = tf.logical_and(mask, tf.greater(jaccard, matching_threshold))
-//            mask = tf.logical_and(mask, feat_scores > -0.5)
-//            mask = tf.logical_and(mask, label < num_classes)         #label满足<21
-//            imask = tf.cast(mask, tf.int64)                          #将mask转换数据类型int型
-//            fmask = tf.cast(mask, dtype)                             #将mask转换数据类型float型
-//            # Update values using mask.
-//            feat_labels = imask * label + (1 - imask) * feat_labels  #当mask=1，则feat_labels=1；否则为0，即背景
-//            feat_scores = tf.where(mask, jaccard, feat_scores)       #tf.where表示如果mask为真则jaccard，否则为feat_scores
+    Tensor prior_scaling_0 = Tensor(DT_FLOAT,ymin.shape());
+    prior_scaling_0.flat<float>().setValues({prior_scaling[0]});
+    Tensor prior_scaling_1 = Tensor(DT_FLOAT,ymin.shape());
+    prior_scaling_1.flat<float>().setValues({prior_scaling[1]});
+    Tensor prior_scaling_2 = Tensor(DT_FLOAT,ymin.shape());
+    prior_scaling_2.flat<float>().setValues({prior_scaling[2]});
+    Tensor prior_scaling_3 = Tensor(DT_FLOAT,ymin.shape());
+    prior_scaling_3.flat<float>().setValues({prior_scaling[3]});
 
-//            feat_ymin = fmask * bbox[0] + (1 - fmask) * feat_ymin    #选择与GT bbox IOU最大的框作为GT bbox，然后循环
-//            feat_xmin = fmask * bbox[1] + (1 - fmask) * feat_xmin
-//            feat_ymax = fmask * bbox[2] + (1 - fmask) * feat_ymax
-//            feat_xmax = fmask * bbox[3] + (1 - fmask) * feat_xmax
+    //Encode features.
+    auto feat_cy = ops::Div(scope,ops::Div(scope,ops::Subtract(scope,_feat_cy,yref),href),prior_scaling_0) ;
+    auto feat_cx = ops::Div(scope,ops::Div(scope,ops::Subtract(scope,_feat_cx,xref),wref),prior_scaling_1);//reshape test
+    auto feat_h  = ops::Div(scope,ops::Log(scope,ops::Div(scope,_feat_h,href)),prior_scaling_2);
+    auto feat_w  = ops::Div(scope,ops::Log(scope,ops::Div(scope,_feat_w,wref)),prior_scaling_3);
+    vector<Tensor> run_feat_xx;
+    session.Run({feat_cy,feat_cx,feat_h,feat_w},&run_feat_xx);
 
-//            # Check no annotation label: ignore these anchors...     #对没有标注标签的锚点框做忽视，应该是背景
-//            # interscts = intersection_with_anchors(bbox)
-//            # mask = tf.logical_and(interscts > ignore_threshold,
-//            #                       label == no_annotation_label)
-//            # # Replace scores by -1.
-//            # feat_scores = tf.where(mask, -tf.cast(mask, dtype), feat_scores)
+    auto feat_localizations = ops::Stack(scope,{run_feat_xx[0],run_feat_xx[1],run_feat_xx[2],run_feat_xx[3]});
 
-//            return [i+1, feat_labels, feat_scores,
-//                    feat_ymin, feat_xmin, feat_ymax, feat_xmax]
-//        # Main loop definition.
-//        i = 0
-//        [i, feat_labels, feat_scores,
-//         feat_ymin, feat_xmin,
-//         feat_ymax, feat_xmax] = tf.while_loop(condition, body,
-//                                               [i, feat_labels, feat_scores,
-//                                                feat_ymin, feat_xmin,
-//                                                feat_ymax, feat_xmax])
-//        # Transform to center / size.                               #转换为中心及长宽形式（计算补偿后的中心）
-//        feat_cy = (feat_ymax + feat_ymin) / 2.  #真实预测值其实是边界框相对于先验框的转换值，encode就是为了求这个转换值
-//        feat_cx = (feat_xmax + feat_xmin) / 2.
-//        feat_h = feat_ymax - feat_ymin
-//        feat_w = feat_xmax - feat_xmin
-//        # Encode features.
-//        feat_cy = (feat_cy - yref) / href / prior_scaling[0]   #(预测真实边界框中心y-参考框中心y)/参考框高/缩放尺度
-//        feat_cx = (feat_cx - xref) / wref / prior_scaling[1]
-//        feat_h = tf.log(feat_h / href) / prior_scaling[2]      #log(预测真实边界框高h/参考框高h)/缩放尺度
-//        feat_w = tf.log(feat_w / wref) / prior_scaling[3]
-//        # Use SSD ordering: x / y / w / h instead of ours.
-//        feat_localizations = tf.stack([feat_cx, feat_cy, feat_w, feat_h], axis=-1)  #返回（cx转换值,cy转换值,w转换值,h转换值）形式的边界框的预测值（其实是预测框相对于参考框的转换）
-//        return feat_labels, feat_localizations, feat_scores                         #返回目标标签，目标预测值（位置转换值），目标置信度
-//        #经过我们回归得到的变换，经过变换得到真实框，所以这个地方损失函数其实是我们预测的是变换，我们实际的框和anchor之间的变换和我们预测的变换之间的loss。我们回归的是一种变换。并不是直接预测框，这个和YOLO是不一样的。和Faster RCNN是一样的
+    bboxes_struct bboxes_struct_;
+    bboxes_struct_.t_labels = feat_labels;
+    //bboxes_struct_.t_loc = feat_localizations;
+    bboxes_struct_.t_scores = feat_scores;
 
+    return bboxes_struct_;
 }
 Output ssd::abs_smooth(Input x)
 {
