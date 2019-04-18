@@ -67,7 +67,9 @@ public:
 
   mobileNet* BatchNorm(Input inputs);
 
-  void network(float alpha, int depth_multiplier, float dropout, bool include_top, std::string weights, int classes, std::string pooling);
+  void network(float alpha =1.0,int depth_multiplier=1,
+               float dropout =0.001,bool include_top =true,std::string weights= "imagenet",
+               int classes = 1000,std::string pooling="none");
 
 public:
   tensorflow::Scope scope;

@@ -26,6 +26,7 @@ int main()
     inputs.flat<float>().setRandom();
     mobile_net.BatchNorm(inputs);
     mobile_net.convBlock(inputs,3,1);
+    mobile_net.network(1);
 
     ssd::ssd test(scope);
     ssd::Tensor1f test1f(20);
@@ -34,7 +35,7 @@ int main()
         test1f(i) = i;
     }
     test.inline_test.oneF = test1f;
-    std::cout<<test.inline_test.oneF<<std::endl;
+    //std::cout<<test.inline_test.oneF<<std::endl;
 
     std::vector<std::vector<int> > test_vector = {{1,2,3},{4,5,6},{7,8}};
     std::vector<int> test_inline;
