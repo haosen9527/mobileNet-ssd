@@ -338,7 +338,7 @@ void ssd::ssdLosses(vector<float> logits, Tensor localisations, Tensor gclasses,
         auto predictions = ops::Softmax(scope.WithOpName("block_"+i),logits[i]);
         auto nmask = ops::LogicalAnd(scope,ops::LogicalNot(scope,pmask),(gscores[i]>(-0.5)?true:false));
         auto fnmask = ops::Cast(scope,nmask,DT_FLOAT);
-        auto nvalues = ops::Where(scope,predictions);
+        auto nvalues = ops::Where3(scope,nmask,predictions,ops::Subtract(scope,1.f,fnmask));
 
     }
 }

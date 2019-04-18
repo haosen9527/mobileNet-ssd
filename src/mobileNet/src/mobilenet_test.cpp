@@ -25,6 +25,7 @@ int main()
     Tensor inputs = Tensor(DT_FLOAT,{1,300,300,3});
     inputs.flat<float>().setRandom();
     mobile_net.BatchNorm(inputs);
+    mobile_net.convBlock(inputs,3,1);
 
     ssd::ssd test(scope);
     ssd::Tensor1f test1f(20);
@@ -43,6 +44,7 @@ int main()
     }
     for(int j=0;j<test_inline.size();j++)
     {
-        std::cout<<test_inline[j];
+       // std::cout<<test_inline[j];
     }
+
 }

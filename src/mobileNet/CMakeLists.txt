@@ -70,3 +70,14 @@ target_link_libraries(${PROJECT_NAME}_test
   tensorflow_framework
   ${catkin_LIBRARIES}
 )
+
+## mobilenet read PB
+add_executable(${PROJECT_NAME}_pb
+    src/mobilenet-ssd_readpb.cpp
+)
+
+target_link_libraries(${PROJECT_NAME}_pb
+  tensorflow_cc
+  tensorflow_framework
+  ${catkin_LIBRARIES}
+)

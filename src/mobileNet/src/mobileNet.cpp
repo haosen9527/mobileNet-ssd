@@ -1,7 +1,7 @@
 #include "mobileNet/mobileNet.h"
 namespace ssd {
 
-mobileNet::mobileNet(const Scope &scope):scope(scope),session(scope)
+mobileNet::mobileNet(const Scope &scope):scope(scope),session(scope),initialized(false)
 {
 
 }
@@ -13,19 +13,35 @@ mobileNet* mobileNet::preprocessInput()
 {
   return this;
 }
-mobileNet* mobileNet::convBlock(Input inputs, int filters,
+mobileNet* mobileNet::convBlock(Tensor inputs, int filters,
                                 float alpha, std::vector<int> kernel, std::vector<int> strides)
 {
-  auto x = tensorflow::ops::Pad(scope.WithOpName("conv1_pad"),inputs,{{1,1},{1,1}});
+  std::cout << inputs.DebugString() << std::endl;
+  auto x = tensorflow::ops::Pad(scope.WithOpName("conv1_pad"),inputs,{{0,0},{1,1},{1,1},{0,0}});
 
+  std::vector<Tensor> run_conv;
+  TF_CHECK_OK(session.Run({x},&run_conv));
+  std::cout<<"x:"<<run_conv[0].DebugString()<<std::endl;
   filters = int(filters * alpha);
-  //Tensor filter = Tensor(DT_FLOAT,{3,3,3,filters});
-  //filter.flat<float>().setRandom();
-  weight = Variable(scope,{kernel[0],kernel[1],3,filters},DT_FLOAT);
-  biases = Variable(scope,{filters},DT_FLOAT);
+
+  if(!initialized)
+  {
+      weight = Variable(scope,{kernel[0],kernel[1],3,filters},DT_FLOAT);
+      biases = Variable(scope,{filters},DT_FLOAT);
+
+      TF_CHECK_OK(session.Run({Assign(scope, weight, Multiply(scope, 0.01f, RandomUniform(scope, {kernel[0],kernel[1],3,filters}, DT_FLOAT))),
+                                         Assign(scope, biases, Multiply(scope, 0.01f, RandomUniform(scope, {filters}, DT_FLOAT)))},nullptr));
+      std::cout<<"run_conv:"<<std::endl;
+      initialized = true;
+  }
 
   auto conv_output = ops::Conv2D(scope.WithOpName("conv1"),x,weight,{1,strides[0],strides[1],1},"SAME");
-  this->BatchNorm(conv_output);
+
+//  std::vector<Tensor> run_conv;
+//  session.Run({conv_output},&run_conv);
+//  std::cout<<"run_conv:"<<run_conv[0].DebugString()<<std::endl;
+
+  //this->BatchNorm(run_conv[0]);
   this->relu6(BN_output[0],"conv1_relu");
   convBlock_output = relu_output;
 
@@ -58,26 +74,29 @@ mobileNet* mobileNet::relu6(Input inputs, std::string name )
 }
 mobileNet* mobileNet::BatchNorm(Input inputs)
 {
-  Tensor scalev = Tensor(DT_FLOAT,{4});
-  scalev.flat<float>().setValues({1,1,1,1});
-  auto scale = tensorflow::ops::Variable(scope,{4},DT_FLOAT);
+  Tensor scalev = Tensor(DT_FLOAT,{3});
+  scalev.flat<float>().setValues({1,1,1});
+  auto scale = tensorflow::ops::Variable(scope,{3},DT_FLOAT);
   auto assgin_scale = tensorflow::ops::Assign(scope,scale,scalev);
 
-  Tensor offsetv = Tensor(DT_FLOAT,{4});
-  offsetv.flat<float>().setValues({0,0,0,0});
-  auto offset = tensorflow::ops::Variable(scope,{4},DT_FLOAT);
+  Tensor offsetv = Tensor(DT_FLOAT,{3});
+  offsetv.flat<float>().setValues({0,0,0});
+  auto offset = tensorflow::ops::Variable(scope,{3},DT_FLOAT);
   auto assgin_offset = tensorflow::ops::Assign(scope,offset,offsetv);
 
-  auto mean = tensorflow::ops::RandomUniform(scope,{0},DT_FLOAT);
-  auto var = tensorflow::ops::RandomUniform(scope,{0},DT_FLOAT);
+  auto mean = Tensor();
+  auto var = Tensor();
 
   TF_CHECK_OK(session.Run({assgin_scale,assgin_offset},nullptr));
   auto BN = tensorflow::ops::FusedBatchNorm(scope,inputs,scale,offset,mean,var);
 
   TF_CHECK_OK(session.Run({BN.y,BN.batch_mean,BN.batch_variance},&BN_output));
-
   std::cout<<"BN:"<<std::endl;
   std::cout<<BN_output[0].DebugString()<<std::endl;
+
+  std::vector<Tensor> run_conv;
+  session.Run({Add(scope, inputs, 0.0f)},&run_conv);
+  std::cout<<"run_conv:"<<run_conv[0].DebugString()<<std::endl;
 
   return this;
 

@@ -46,7 +46,7 @@ public:
    * Output shape:
    *    tensor of block.
    * */
-  mobileNet* convBlock(Input inputs,int filters,float alpha,std::vector<int> kernel = {3,3},std::vector<int> strides ={1,1});
+  mobileNet* convBlock(Tensor inputs, int filters, float alpha, std::vector<int> kernel = {3,3}, std::vector<int> strides ={1,1});
   /*
    * Adds a depthwise convolution block
    *  Arguments:
@@ -79,6 +79,7 @@ public:
   //weight biases
   Output weight;
   Output biases;
+  bool initialized;
 };
 }//namespace ssd
 
