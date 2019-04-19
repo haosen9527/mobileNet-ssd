@@ -15,6 +15,7 @@ struct mobileNetConfig
 
   //image size
   int imageSize = 300;
+  bool is_padding = false;
 };
 
 

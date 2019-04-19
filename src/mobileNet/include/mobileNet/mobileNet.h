@@ -61,9 +61,9 @@ public:
    *  Output shape:
    *    tensor of block.
    * */
-  mobileNet* depthwiseConvBlock(Input inputs,int pointwise_conv_filters,float alpha,int depth_multiplier=1,std::vector<int> strides = {1,1},int block_id =1);
+  mobileNet* depthwiseConvBlock(Tensor inputs,int pointwise_conv_filters,float alpha,int depth_multiplier=1,std::vector<int> strides = {1,1},int block_id =1);
 
-  mobileNet* relu6(Input x, std::string name);
+  mobileNet* relu6(Tensor x, std::string name);
 
   mobileNet* BatchNorm(Input inputs);
 
@@ -76,12 +76,14 @@ public:
   tensorflow::ClientSession session;
   std::vector<Tensor> BN_output;
   Output tensor;
-  Output relu_output;
-  Output convBlock_output;
+  Tensor relu_output;
+  Tensor convBlock_output;
   //weight biases
   Output weight;
   Output biases;
-  bool initialized;
+  bool initialized,initialized_depth;
+
+  mobileNetConfig params;
 };
 }//namespace ssd
 

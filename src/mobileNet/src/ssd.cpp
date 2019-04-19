@@ -11,7 +11,8 @@ ssd::~ssd()
 
 }
 
-void ssd::network()
+void ssd::network(Tensor inputs,int num_classes,std::vector<std::string> feat_layers,vector<vector<float> > anchor_sizes,vector<vector<float> > anchor_ratios,
+                  std::vector<int> normalizations, bool is_training,float dropout_keep_prob ,string reuse)
 {
 
 }
@@ -311,6 +312,7 @@ Output ssd::abs_smooth(Input x)
 
     return r;
 }
+//SSD loss function
 void ssd::ssdLosses(vector<float> logits, Tensor localisations, Tensor gclasses, Tensor glocalisations,
                     vector<float> gscores, float match_threshold, float negative_ratio, float alpha, float label_smoothing)
 {
@@ -338,7 +340,12 @@ void ssd::ssdLosses(vector<float> logits, Tensor localisations, Tensor gclasses,
         auto predictions = ops::Softmax(scope.WithOpName("block_"+i),logits[i]);
         auto nmask = ops::LogicalAnd(scope,ops::LogicalNot(scope,pmask),(gscores[i]>(-0.5)?true:false));
         auto fnmask = ops::Cast(scope,nmask,DT_FLOAT);
-        auto nvalues = ops::Where3(scope,nmask,predictions,ops::Subtract(scope,1.f,fnmask));
+        vector<Tensor> run_predictions;
+        session.Run({predictions},&run_predictions);
+
+        auto nvalues = ops::Where3(scope,nmask,run_predictions[0],ops::Subtract(scope,1.f,fnmask));
+
+
 
     }
 }

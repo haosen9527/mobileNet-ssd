@@ -38,7 +38,8 @@ class ssd :public mobileNet
 public:
     ssd(const Scope &scope);
     ~ssd();
-    void network();
+    void network(Tensor inputs,int num_classes,std::vector<std::string> feat_layers,vector<vector<float> > anchor_sizes,vector<vector<float> > anchor_ratios,
+                 std::vector<int> normalizations, bool is_training,float dropout_keep_prob =0.5,string reuse ="None");
 
 
 public:

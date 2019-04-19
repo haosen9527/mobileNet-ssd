@@ -22,11 +22,11 @@ int main()
     std::cout<<mcfg.alpha<<std::endl;
    // mobile_net.network(mcfg.alpha,mcfg.depth_multiplier,mcfg.dropout,mcfg.include_top,mcfg.weights,mcfg.num_classes,"SAME");
 
-    Tensor inputs = Tensor(DT_FLOAT,{1,300,300,3});
+    Tensor inputs = Tensor(DT_FLOAT,{1,224,224,3});
     inputs.flat<float>().setRandom();
     mobile_net.BatchNorm(inputs);
     mobile_net.convBlock(inputs,3,1);
-    mobile_net.network(1);
+    mobile_net.network(1,1);
 
     ssd::ssd test(scope);
     ssd::Tensor1f test1f(20);

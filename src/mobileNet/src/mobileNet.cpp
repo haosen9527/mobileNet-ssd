@@ -1,7 +1,7 @@
 #include "mobileNet/mobileNet.h"
 namespace ssd {
 
-mobileNet::mobileNet(const Scope &scope):scope(scope),session(scope),initialized(false)
+mobileNet::mobileNet(const Scope &scope):scope(scope),session(scope),initialized(false),initialized_depth(false)
 {
 
 }
@@ -17,8 +17,15 @@ mobileNet* mobileNet::convBlock(Tensor inputs, int filters,
                                 float alpha, std::vector<int> kernel, std::vector<int> strides)
 {
   std::cout << inputs.DebugString() << std::endl;
-  auto x = tensorflow::ops::Pad(scope.WithOpName("conv1_pad"),inputs,{{0,0},{1,1},{1,1},{0,0}});
+  Output x;
+  if(params.is_padding)
+  {
+      x = tensorflow::ops::Pad(scope.WithOpName("conv1_pad"),inputs,{{0,0},{1,1},{1,1},{0,0}});
+  }
+  else
+  {
 
+  }
   filters = int(filters * alpha);
 
   if(!initialized)
@@ -36,7 +43,7 @@ mobileNet* mobileNet::convBlock(Tensor inputs, int filters,
 
   std::vector<Tensor> run_conv;
   session.Run({conv_output},&run_conv);
-  std::cout<<"run_conv:"<<run_conv[0].DebugString()<<std::endl;
+  //std::cout<<"run_conv:"<<run_conv[0].DebugString()<<std::endl;
 
   this->BatchNorm(run_conv[0]);
   this->relu6(BN_output[0],"conv1_relu");
@@ -44,39 +51,56 @@ mobileNet* mobileNet::convBlock(Tensor inputs, int filters,
 
   return this;
 }
-mobileNet* mobileNet::depthwiseConvBlock(Input inputs, int pointwise_conv_filters,
+mobileNet* mobileNet::depthwiseConvBlock(Tensor inputs, int pointwise_conv_filters,
                                          float alpha, int depth_multiplier, std::vector<int> strides, int block_id)
 {
   pointwise_conv_filters = float(pointwise_conv_filters*alpha);
 
-  weight = Variable(scope,{3,3,3,depth_multiplier},DT_FLOAT);
-  biases = Variable(scope,{pointwise_conv_filters},DT_FLOAT);
+  std::vector<Tensor> test;
+  auto test_op =ops::Identity(scope,inputs);
+  session.Run({test_op},&test);
+
+  if(!initialized_depth)
+  {
+      weight = Variable(scope,{3,3,3,depth_multiplier},DT_FLOAT);
+      biases = Variable(scope,{pointwise_conv_filters},DT_FLOAT);
+      TF_CHECK_OK(session.Run({Assign(scope, weight, Multiply(scope, 0.01f, RandomUniform(scope,{3,3,3,depth_multiplier}, DT_FLOAT))),
+                                     Assign(scope, biases, Multiply(scope, 0.01f, RandomUniform(scope, {pointwise_conv_filters}, DT_FLOAT)))},nullptr));
+      initialized_depth=true;
+  }
 
   auto ZeroPadding2D = tensorflow::ops::Pad(scope,inputs,{{0,0},{1,1},{1,1},{0,0}});
   std::vector<Tensor> run_conv;
-  session.Run({ZeroPadding2D},&run_conv);
 
-  auto Depthwiseconv = tensorflow::ops::DepthwiseConv2dNative(scope.WithOpName("conv2D_dw/"+block_id),run_conv[0],weight,{1,strides[0],strides[1],1},"SAME");
+  auto Depthwiseconv = tensorflow::ops::DepthwiseConv2dNative(scope.WithOpName("conv2D_dw/"+block_id),ZeroPadding2D,weight,{1,strides[0],strides[1],1},"SAME");
 
   session.Run({Depthwiseconv},&run_conv);
-
-  std::cout<<"Depthwiseconv:"
-          <<run_conv[0].DebugString()<<std::endl;
+  std::cout<<"Depthwiseconv:"<<run_conv[0].DebugString()
+          /*<<run_conv[0].tensor<float,4>()*/<<std::endl;
 
   this->BatchNorm(run_conv[0]);
   this->relu6(BN_output[0],"relu_depth");
+  std::cout<<"BN:"<<std::endl<<BN_output[0].DebugString()<<std::endl;
+
   run_conv.clear();
   auto conv2D = tensorflow::ops::Conv2D(scope.WithOpName("conv2D/"+block_id),relu_output,weight,{1,strides[0],strides[1],1},"SAME");
   session.Run({conv2D},&run_conv);
+  std::cout<<"Depthwiseconv_2D:"<<std::endl<<run_conv[0].DebugString()<<std::endl;
+
   this->BatchNorm(run_conv[0]);
   this->relu6(BN_output[0],"depthwiseConvBlock");
 
   return this;
 }
-mobileNet* mobileNet::relu6(Input inputs, std::string name )
+mobileNet* mobileNet::relu6(Tensor inputs, std::string name )
 {
-  relu_output = tensorflow::ops::Relu6(scope.WithOpName(name),inputs);
-  return this;
+    std::vector<Tensor> run_relu6;
+    std::cout<<"run_relu:"<<std::endl<<inputs.DebugString()<<std::endl;
+
+    session.Run({tensorflow::ops::Relu6(scope.WithOpName(name),inputs)},&run_relu6);
+    relu_output =run_relu6[0];
+    std::cout<<"run_relu_output:"<<std::endl<<run_relu6[0].DebugString()<<std::endl;
+    return this;
 }
 mobileNet* mobileNet::BatchNorm(Input inputs)
 {
@@ -97,8 +121,8 @@ mobileNet* mobileNet::BatchNorm(Input inputs)
   auto BN = tensorflow::ops::FusedBatchNorm(scope,inputs,scale,offset,mean,var);
 
   TF_CHECK_OK(session.Run({BN.y,BN.batch_mean,BN.batch_variance},&BN_output));
-  std::cout<<"BN:"<<std::endl;
-  std::cout<<BN_output[0].DebugString()<<std::endl;
+//  std::cout<<"BN:"<<std::endl;
+//  std::cout<<BN_output[0].DebugString()<<std::endl;
 
   return this;
 
@@ -108,7 +132,7 @@ void mobileNet::network(float alpha, int depth_multiplier, float dropout, bool i
 {
   //image data rows/cols channels?
   //image size [128 or 160 or 192 or 224]==default size
-  Tensor imageData = Tensor(DT_FLOAT,{1,300,300,3});
+  Tensor imageData = Tensor(DT_FLOAT,{1,224,224,3});
   imageData.flat<float>().setRandom();
 
   convBlock(imageData,32,alpha,{3,3},{2,2});
@@ -125,6 +149,8 @@ void mobileNet::network(float alpha, int depth_multiplier, float dropout, bool i
       depthwiseConvBlock(relu_output,512,alpha,depth_multiplier,{1,1,1,1},11);
       depthwiseConvBlock(relu_output,1024,alpha,depth_multiplier,{1,2,2,1},12);
       depthwiseConvBlock(relu_output,1024,alpha,depth_multiplier,{1,1,1,1},13);
+
+      std::cout<<"mobileNet-SSD network load ok !"<<std::endl;
   if(include_top)
   {
     //shape
