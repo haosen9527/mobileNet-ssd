@@ -43,7 +43,7 @@ const vector<string > classNames = { "background",
                              "toilet", "tv", "laptop", "mouse", "remote", "keyboard", "cell phone", "microwave", "oven", "toaster", "sink", "refrigerator", "book", "clock", "vase",
                              "scissors", "teddy bear", "hair drier", "toothbrush"};
 
-string MNIST_MODEL_PATH  = "/home/micros/QT_pro/gitpro/catkin_new/src/data/ssd_mobilenet_v1_coco_2018_01_28/frozen_inference_graph.pb";
+string MNIST_MODEL_PATH  = "/home/haosen/gitPro/catkin_new/data/ssd_mobilenet_v1_ppn_shared_box_predictor_300x300_coco14_sync_2018_07_03/frozen_inference_graph.pb";
 
 
 //从文件名中读取数据
@@ -108,38 +108,59 @@ int Read_pb()
     int input_width = 300;
     vector<Tensor> inputs;
     // string image_path(argv[1]);
-    string image_path("/home/micros/catkin_ws/src/faster_rcnn_tf/data/demo/001150.jpg");
+    string image_path("/home/haosen/catkin_ws/src/faster_rcnn_tf/data/demo/000542.jpg");
     if (!ReadTensorFromImageFile(image_path, input_height, input_width,&inputs).ok()) {
         cout<<"Read image file failed"<<endl;
         return -1;
     }
 
+    // 导入模型参数
+    Tensor checkpointPathTensor(DT_STRING, TensorShape());
+    checkpointPathTensor.scalar<std::string>()() = std::string("/home/haosen/gitPro/catkin_new/data/ssd_mobilenet_v1_ppn_shared_box_predictor_300x300_coco14_sync_2018_07_03/");
+
+    for(int i=0;i<graph_def.node_size();i++)
+    {
+        std::cout<<graph_def.node().Get(i).name()<<std::endl;
+    }
+//    status = session->Run(
+//    {{ graph_def.saver_def().filename_tensor_name(), checkpointPathTensor },},
+//    {},
+//    {graph_def.saver_def().restore_op_name()},
+//    nullptr);
+    if (!status.ok()) {
+    throw runtime_error("Error loading checkpoint: " + status.ToString());
+    }
+
     vector<Tensor> outputs;
     string input = "ToFloat";
+    string test1 = "detection_boxes:0";
+    string test2 = "num_detections:0";
     string output = "detection_classes";//graph中的输入节点和输出节点，需要预先知道
     string output1 = "detection_scores";
 
     pair<string,Tensor>img(input,inputs[0]);
-    status = session->Run({img},{output,output1}, {}, &outputs);//Run,得到运行结果，存到outputs中
+    status = session->Run({img},{output,output1,test1,test2}, {}, &outputs);//Run,得到运行结果，存到outputs中
     if (!status.ok()) {
         cout<<"Running model failed"<<endl;
         cout<<status.ToString()<<endl;
         return -1;
     }
+    //std::cout<<img.first<<img.second.tensor<float,4>()<<std::endl;
 
     //得到模型运行结果
     Tensor t = outputs[0];
     auto tmap = t.tensor<float, 2>();
     Tensor t1 = outputs[1];
     auto tmap1 = t1.tensor<float, 2>();
+    auto tmap3 = outputs[3].tensor<float, 1>();
     int output_dim = t.shape().dim_size(1);
     std::cout<<"detection_classes:"<<outputs[0].DebugString()
             <<endl<<output_dim<<endl
             <<endl<<tmap<<endl
            <<endl<<outputs[1].DebugString()<<endl
-          <<endl<<classNames[tmap(0,1)]<<endl
-            <<"detection_scores:"<<tmap1<<std::endl;
-
+          <<endl<<classNames[(tmap3(0)-1)]<<endl
+            <<"detection_scores:"<<tmap1<<std::endl
+           <<"detection_boxes:"<<endl<<outputs[2].tensor<float,3>()<<endl;
 
 }
 
