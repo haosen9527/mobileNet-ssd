@@ -59,8 +59,8 @@ const vector<string > classNames = { "background",
                              "toilet", "tv", "laptop", "mouse", "remote", "keyboard", "cell phone", "microwave", "oven", "toaster", "sink", "refrigerator", "book", "clock", "vase",
                              "scissors", "teddy bear", "hair drier", "toothbrush"};
 
-string MODEL_PATH  = "/home/micros/ImageTool/src/opencv-tf-mssd/data/frozen_inference_graph.pb";
-string Image_path ="/home/micros/catkin_ssd/image/000243.jpg";
+string MODEL_PATH  = "/home/haosen/catkin_new/src/data/ssd_mobilenet_v1_ppn_shared_box_predictor_300x300_coco14_sync_2018_07_03/frozen_inference_graph.pb";
+string Image_path ="/home/haosen/catkin_ws/src/faster_rcnn_tf/data/demo/000542.jpg";
 
 //从文件名中读取数据
 Status ReadTensorFromImageFile(string file_name, const int input_height,
@@ -82,9 +82,10 @@ Status ReadTensorFromImageFile(string file_name, const int input_height,
     }
     // 下面几步是读取图片并处理
     auto float_caster =Cast(root.WithOpName("float_caster"), image_reader, DT_FLOAT);
+    //auto norm = Multiply(root.WithOpName("norm"),float_caster,{1/255.0});
     auto dims_expander = ExpandDims(root, float_caster, 0);
     auto resized = ResizeBilinear(root, dims_expander,Const(root.WithOpName("resize"), {input_height, input_width}));
-    // Div(root.WithOpName(output_name), Sub(root, resized, {input_mean}),{input_std});
+     //auto test = Div(root, resized,255.0f);
     Transpose(root.WithOpName("transpose"),resized,{0,2,1,3});
 
     GraphDef graph;
@@ -93,6 +94,7 @@ Status ReadTensorFromImageFile(string file_name, const int input_height,
     unique_ptr<Session> session(NewSession(SessionOptions()));
     session->Create(graph);
     session->Run({}, {"transpose"}, {}, out_tensors);//Run，获取图片数据保存到Tensor中
+    std::cout<<"size:"<<out_tensors->size()<<std::endl;
 
     return Status::OK();
 }
@@ -118,22 +120,23 @@ tensorflow::Tensor opencv_read_image()
 
     //std::cout<<"*******reader ok**********"<<std::endl;
 
-    tensorflow::Tensor return_image_tensor = tensorflow::Tensor(DT_UINT8,image_shape);
+//    tensorflow::Tensor return_image_tensor = tensorflow::Tensor(DT_UINT8,image_shape);
 
-    auto temp = image_tensor.tensor<float,4>();
-    auto return_temp = return_image_tensor.tensor<uint8,4>();
-    for(int i=0; i < image_tensor.dim_size(1);i++)
-    {
-        for(int j=0;j < image_tensor.dim_size(2);j++)
-        {
-            for(int k=0;k< image_tensor.dim_size(3);k++)
-            {
-                return_temp(0,i,j,k) = (uint8)temp(0,i,j,k);
-            }
-        }
-    }
+//    auto temp = image_tensor.tensor<float,4>();
+//    auto return_temp = return_image_tensor.tensor<uint8,4>();
+//    for(int i=0; i < image_tensor.dim_size(1);i++)
+//    {
+//        for(int j=0;j < image_tensor.dim_size(2);j++)
+//        {
+//            for(int k=0;k< image_tensor.dim_size(3);k++)
+//            {
+//                return_temp(0,i,j,k) = (uint8)temp(0,i,j,k);
+//            }
+//        }
+//    }
 
-    return return_image_tensor;
+    //return return_image_tensor;
+    return image_tensor;
 }
 
 
@@ -159,7 +162,13 @@ int Read_pb()
 
     cout<<"tensorflow model load succeed"<<endl;
     //读取图像到inputs中
-    Tensor inputs = opencv_read_image();
+    //opencv readimage
+    //Tensor inputs = opencv_read_image();
+    //tensorflow readimage
+    vector<Tensor> inputs_list;
+    ReadTensorFromImageFile(Image_path,inWidth,inHeight,&inputs_list);
+    Tensor inputs = inputs_list[0];
+
 //    if (!ReadTensorFromImageFile(Image_path, input_height, input_width,&inputs).ok()) {
 //        cout<<"Read image file failed"<<endl;
 //        return -1;
@@ -169,10 +178,10 @@ int Read_pb()
     Tensor checkpointPathTensor(DT_STRING, TensorShape());
     checkpointPathTensor.scalar<std::string>()() = std::string("/home/haosen/gitPro/catkin_new/data/ssd_mobilenet_v1_ppn_shared_box_predictor_300x300_coco14_sync_2018_07_03/");
 
-    for(int i=0;i<graph_def.node_size();i++)
-    {
-        std::cout<<graph_def.node().Get(i).name()<<std::endl;
-    }
+//    for(int i=0;i<graph_def.node_size();i++)
+//    {
+//        std::cout<<graph_def.node().Get(i).name()<<std::endl;
+//    }
 //    status = session->Run(
 //    {{ graph_def.saver_def().filename_tensor_name(), checkpointPathTensor },},
 //    {},
@@ -183,11 +192,11 @@ int Read_pb()
     }
 
     vector<Tensor> outputs;
-    string input = "image_tensor";
+    string input = "ToFloat:0";
     string test1 = "detection_boxes:0";
     string test2 = "num_detections:0";
-    string output = "detection_classes";//graph中的输入节点和输出节点，需要预先知道
-    string output1 = "detection_scores";
+    string output = "detection_classes:0";//graph中的输入节点和输出节点，需要预先知道
+    string output1 = "detection_scores:0";
 
     pair<string,Tensor>img(input,inputs);
     status = session->Run({img},{output,output1,test1,test2}, {}, &outputs);//Run,得到运行结果，存到outputs中
@@ -199,33 +208,26 @@ int Read_pb()
     //std::cout<<img.first<<img.second.tensor<float,4>()<<std::endl;
 
     //得到模型运行结果
-    Tensor t = outputs[0];
-    auto tmap = t.tensor<float, 2>();
-    Tensor t1 = outputs[1];
-    auto tmap1 = t1.tensor<float, 2>();
-    auto tmap3 = outputs[3].tensor<float, 1>();
-    int output_dim = t.shape().dim_size(1);
-    std::cout<<"detection_classes:"<<outputs[0].DebugString()
-            <<endl<<output_dim<<endl
-            <<endl<<tmap<<endl
-           <<endl<<outputs[1].DebugString()<<endl
-          <<endl<<"className:"<<"num_detections"<<outputs[3].DebugString()<<endl
-            <<"detection_scores:"<<outputs[1].DebugString()<<std::endl
-            <<"detection_scores:"<<(1-tmap1)<<std::endl
-              <<"detection_boxes:"<<endl<<outputs[2].DebugString()<<endl
-           <<"detection_boxes:"<<endl<<outputs[2].tensor<float,3>()<<endl;
+    std::cout<<"detection_classes:"<<outputs[0].DebugString()<<endl
+            <<outputs[0].tensor<float,2>()<<endl
+           <<"num_detections"<<outputs[3].DebugString()<<endl
+             <<outputs[3].tensor<float,1>()<<endl
+           <<"detection_scores:"<<outputs[1].DebugString()<<std::endl
+             <<outputs[1].tensor<float,2>()<<endl
+           <<"detection_boxes:"<<outputs[2].DebugString()<<endl;
 
     Tensor boxes = Tensor(DT_FLOAT,{100,7});
     auto boxestemp = boxes.tensor<float,2>();
     for(int i=0;i<outputs[0].dim_size(1);i++)
     {
-            boxestemp(i,0) = outputs[2].tensor<float,3>()(0,i,j);
-            boxestemp(i,1) = outputs[2].tensor<float,3>()(0,i,j);
-            boxestemp(i,2) = outputs[2].tensor<float,3>()(0,i,j);
-            boxestemp(i,3) = outputs[1].tensor<float,3>()(0,i,j);
-            boxestemp(i,4) = outputs[1].tensor<float,3>()(0,i,j);
-            boxestemp(i,5) = outputs[1].tensor<float,3>()(0,i,j);
-            boxestemp(i,6) = outputs[1].tensor<float,3>()(0,i,j);
+            boxestemp(i,0) = outputs[3].tensor<float,1>()(i);//num_detections
+            boxestemp(i,1) = outputs[0].tensor<float,2>()(0,i);//detection_classes
+            boxestemp(i,2) = outputs[1].tensor<float,2>()(0,i);//detection_scores
+            std::cout<<"score"<<boxestemp(i,2)<<std::endl;
+            boxestemp(i,3) = outputs[2].tensor<float,3>()(0,i,0);//boxes
+            boxestemp(i,4) = outputs[2].tensor<float,3>()(0,i,1);
+            boxestemp(i,5) = outputs[2].tensor<float,3>()(0,i,2);
+            boxestemp(i,6) = outputs[2].tensor<float,3>()(0,i,3);
     }
     std::cout<<boxes.tensor<float,2>()<<std::endl;
 
@@ -250,8 +252,9 @@ int Read_pb()
         cropSize);
 
 
-    frame = frame(crop);
-    float confidenceThreshold = 0.30;
+
+    //frame = frame(crop);
+    float confidenceThreshold = 0.60;
     for (int i = 0; i < boxes.dim_size(1); i++)
     {
         float confidence = boxestemp(i, 2);
@@ -279,8 +282,8 @@ int Read_pb()
                 (int)(yRightTop - yLeftBottom));
 
             rectangle(frame, object, Scalar(0, 255, 0),2);
-            rectangle(frame,cv::Point(xLeftBottom,yLeftBottom),Point(xRightTop - xLeftBottom,yRightTop - yLeftBottom),Scalar(255,0,0),1,1,0);
-            String label = String(classNames[objectClass]) + ": " + conf;
+            //rectangle(frame,cv::Point(xLeftBottom,yLeftBottom),Point(xRightTop - xLeftBottom,yRightTop - yLeftBottom),Scalar(255,0,0),1,1,0);
+            String label = String(classNames[(objectClass-1)]) + ": " + conf;
             std::cout<<"className:"<<label<<endl;
             int baseLine = 0;
             cv::Size labelSize = getTextSize(label, FONT_HERSHEY_SIMPLEX, 0.5, 1, &baseLine);
