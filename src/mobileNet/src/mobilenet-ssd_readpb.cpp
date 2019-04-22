@@ -59,8 +59,8 @@ const vector<string > classNames = { "background",
                              "toilet", "tv", "laptop", "mouse", "remote", "keyboard", "cell phone", "microwave", "oven", "toaster", "sink", "refrigerator", "book", "clock", "vase",
                              "scissors", "teddy bear", "hair drier", "toothbrush"};
 
-string MODEL_PATH  = "/home/haosen/gitPro/catkin_new/data/ssd_mobilenet_v1_ppn_shared_box_predictor_300x300_coco14_sync_2018_07_03/frozen_inference_graph.pb";
-string Image_path ="/home/haosen/catkin_ws/src/faster_rcnn_tf/data/demo/000456.jpg";
+string MODEL_PATH  = "/home/micros/ImageTool/src/opencv-tf-mssd/data/frozen_inference_graph.pb";
+string Image_path ="/home/micros/catkin_ssd/image/000243.jpg";
 
 //从文件名中读取数据
 Status ReadTensorFromImageFile(string file_name, const int input_height,
@@ -97,6 +97,45 @@ Status ReadTensorFromImageFile(string file_name, const int input_height,
     return Status::OK();
 }
 
+tensorflow::Tensor opencv_read_image()
+{
+    cv::Mat Imgdata = cv::imread(Image_path,CV_LOAD_IMAGE_COLOR);
+    //norm
+    cv::Mat NormImgData;
+    Imgdata.convertTo(NormImgData,CV_32FC3,1.0/255.0);
+    //resize
+    cv::Mat dts;
+    cv::resize(NormImgData,dts,cv::Size(inWidth,inHeight));
+    //std::cout<<"*******reader ok**********"<<std::endl;
+    //toTensor
+    float *image_float_data =(float*)dts.data;
+
+    tensorflow::Tensor image_tensor;
+
+    tensorflow::TensorShape image_shape = tensorflow::TensorShape{1, dts.rows, dts.cols, dts.channels()};
+    image_tensor = tensorflow::Tensor(tensorflow::DT_FLOAT, image_shape);
+    std::copy_n(image_float_data, image_shape.num_elements(), image_tensor.flat<float>().data());
+
+    //std::cout<<"*******reader ok**********"<<std::endl;
+
+    tensorflow::Tensor return_image_tensor = tensorflow::Tensor(DT_UINT8,image_shape);
+
+    auto temp = image_tensor.tensor<float,4>();
+    auto return_temp = return_image_tensor.tensor<uint8,4>();
+    for(int i=0; i < image_tensor.dim_size(1);i++)
+    {
+        for(int j=0;j < image_tensor.dim_size(2);j++)
+        {
+            for(int k=0;k< image_tensor.dim_size(3);k++)
+            {
+                return_temp(0,i,j,k) = (uint8)temp(0,i,j,k);
+            }
+        }
+    }
+
+    return return_image_tensor;
+}
+
 
 int Read_pb()
 {
@@ -120,13 +159,11 @@ int Read_pb()
 
     cout<<"tensorflow model load succeed"<<endl;
     //读取图像到inputs中
-    int input_height = 300;
-    int input_width = 300;
-    vector<Tensor> inputs;
-    if (!ReadTensorFromImageFile(Image_path, input_height, input_width,&inputs).ok()) {
-        cout<<"Read image file failed"<<endl;
-        return -1;
-    }
+    Tensor inputs = opencv_read_image();
+//    if (!ReadTensorFromImageFile(Image_path, input_height, input_width,&inputs).ok()) {
+//        cout<<"Read image file failed"<<endl;
+//        return -1;
+//    }
 
     // 导入模型参数
     Tensor checkpointPathTensor(DT_STRING, TensorShape());
@@ -146,13 +183,13 @@ int Read_pb()
     }
 
     vector<Tensor> outputs;
-    string input = "ToFloat";
+    string input = "image_tensor";
     string test1 = "detection_boxes:0";
     string test2 = "num_detections:0";
     string output = "detection_classes";//graph中的输入节点和输出节点，需要预先知道
     string output1 = "detection_scores";
 
-    pair<string,Tensor>img(input,inputs[0]);
+    pair<string,Tensor>img(input,inputs);
     status = session->Run({img},{output,output1,test1,test2}, {}, &outputs);//Run,得到运行结果，存到outputs中
     if (!status.ok()) {
         cout<<"Running model failed"<<endl;
@@ -172,20 +209,23 @@ int Read_pb()
             <<endl<<output_dim<<endl
             <<endl<<tmap<<endl
            <<endl<<outputs[1].DebugString()<<endl
-          <<endl<<classNames[(tmap3(0)-1)]<<endl
-            <<"detection_scores:"<<tmap1<<std::endl
+          <<endl<<"className:"<<"num_detections"<<outputs[3].DebugString()<<endl
+            <<"detection_scores:"<<outputs[1].DebugString()<<std::endl
+            <<"detection_scores:"<<(1-tmap1)<<std::endl
               <<"detection_boxes:"<<endl<<outputs[2].DebugString()<<endl
            <<"detection_boxes:"<<endl<<outputs[2].tensor<float,3>()<<endl;
 
-    Tensor boxes = Tensor(DT_FLOAT,{100,4});
+    Tensor boxes = Tensor(DT_FLOAT,{100,7});
     auto boxestemp = boxes.tensor<float,2>();
-    for(int i=0;i<outputs[2].dim_size(1);i++)
+    for(int i=0;i<outputs[0].dim_size(1);i++)
     {
-        for(int j=0;j<outputs[2].dim_size(2);j++)
-        {
-            boxestemp(i,j)=
-            outputs[2].tensor<float,3>()(0,i,j);
-        }
+            boxestemp(i,0) = outputs[2].tensor<float,3>()(0,i,j);
+            boxestemp(i,1) = outputs[2].tensor<float,3>()(0,i,j);
+            boxestemp(i,2) = outputs[2].tensor<float,3>()(0,i,j);
+            boxestemp(i,3) = outputs[1].tensor<float,3>()(0,i,j);
+            boxestemp(i,4) = outputs[1].tensor<float,3>()(0,i,j);
+            boxestemp(i,5) = outputs[1].tensor<float,3>()(0,i,j);
+            boxestemp(i,6) = outputs[1].tensor<float,3>()(0,i,j);
     }
     std::cout<<boxes.tensor<float,2>()<<std::endl;
 
