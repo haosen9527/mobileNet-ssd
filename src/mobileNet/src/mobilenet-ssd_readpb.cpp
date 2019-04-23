@@ -59,8 +59,8 @@ const vector<string > classNames = { "background",
                              "toilet", "tv", "laptop", "mouse", "remote", "keyboard", "cell phone", "microwave", "oven", "toaster", "sink", "refrigerator", "book", "clock", "vase",
                              "scissors", "teddy bear", "hair drier", "toothbrush"};
 
-string MODEL_PATH  = "/home/haosen/catkin_new/src/data/ssd_mobilenet_v1_ppn_shared_box_predictor_300x300_coco14_sync_2018_07_03/frozen_inference_graph.pb";
-string Image_path ="/home/haosen/catkin_ws/src/faster_rcnn_tf/data/demo/000542.jpg";
+string MODEL_PATH  = "/home/micros/ImageTool/src/opencv-tf-mssd/data/frozen_inference_graph.pb";
+string Image_path ="/home/micros/catkin_ws/src/faster_rcnn_tf/data/demo/000000565624.jpg";
 
 //从文件名中读取数据
 Status ReadTensorFromImageFile(string file_name, const int input_height,
@@ -85,15 +85,21 @@ Status ReadTensorFromImageFile(string file_name, const int input_height,
     //auto norm = Multiply(root.WithOpName("norm"),float_caster,{1/255.0});
     auto dims_expander = ExpandDims(root, float_caster, 0);
     auto resized = ResizeBilinear(root, dims_expander,Const(root.WithOpName("resize"), {input_height, input_width}));
-     //auto test = Div(root, resized,255.0f);
-    Transpose(root.WithOpName("transpose"),resized,{0,2,1,3});
+
+//    float input_mean = 0;
+//    float input_std = 1;
+//    auto norm= Div(root.WithOpName("norm"), Sub(root, resized, {input_mean}),
+//          {input_std});
+
+    Transpose(root.WithOpName("transpose"),resized,{0,1,2,3});
+
 
     GraphDef graph;
     root.ToGraphDef(&graph);
 
     unique_ptr<Session> session(NewSession(SessionOptions()));
-    session->Create(graph);
-    session->Run({}, {"transpose"}, {}, out_tensors);//Run，获取图片数据保存到Tensor中
+    TF_CHECK_OK(session->Create(graph));
+    TF_CHECK_OK(session->Run({}, {"transpose"}, {}, out_tensors));//Run，获取图片数据保存到Tensor中
     std::cout<<"size:"<<out_tensors->size()<<std::endl;
 
     return Status::OK();
@@ -180,7 +186,7 @@ int Read_pb()
 
 //    for(int i=0;i<graph_def.node_size();i++)
 //    {
-//        std::cout<<graph_def.node().Get(i).name()<<std::endl;
+//        std::cout<<graph_def.node().Get(i).DebugString()<<std::endl;
 //    }
 //    status = session->Run(
 //    {{ graph_def.saver_def().filename_tensor_name(), checkpointPathTensor },},
@@ -199,6 +205,7 @@ int Read_pb()
     string output1 = "detection_scores:0";
 
     pair<string,Tensor>img(input,inputs);
+    //pair<string.Tensor>priorBox(input_PriorBox,)
     status = session->Run({img},{output,output1,test1,test2}, {}, &outputs);//Run,得到运行结果，存到outputs中
     if (!status.ok()) {
         cout<<"Running model failed"<<endl;
@@ -254,7 +261,11 @@ int Read_pb()
 
 
     //frame = frame(crop);
-    float confidenceThreshold = 0.60;
+
+    std::cout<<"frame cols:"<<frame.cols<<endl;
+    std::cout<<"frame rows:"<<frame.rows<<endl;
+
+    float confidenceThreshold = 0.50;
     for (int i = 0; i < boxes.dim_size(1); i++)
     {
         float confidence = boxestemp(i, 2);
@@ -264,10 +275,17 @@ int Read_pb()
         {
             size_t objectClass = (size_t)(boxestemp(i, 1));
 
-            int xLeftBottom = static_cast<int>(boxestemp(i, 3) * frame.cols);
-            int yLeftBottom = static_cast<int>(boxestemp(i, 4) * frame.rows);
-            int xRightTop = static_cast<int>(boxestemp(i, 5) * frame.cols);
-            int yRightTop = static_cast<int>(boxestemp(i, 6) * frame.rows);
+            int xLeftBottom = static_cast<int>(boxestemp(i, 4) * frame.cols);
+            int yLeftBottom = static_cast<int>(boxestemp(i, 3) * frame.rows);
+            int xRightTop = static_cast<int>(boxestemp(i, 6) * frame.cols);
+            int yRightTop = static_cast<int>(boxestemp(i, 5) * frame.rows);
+
+
+            std::cout<<"boxestemp(i, *) :"<<boxestemp(i, 3)<<endl
+                    <<boxestemp(i, 4)<<endl
+                   <<boxestemp(i, 5)<<endl
+                  <<boxestemp(i, 6)<<endl;
+
             std::cout<<"x,y,x,y :"<<xLeftBottom<<endl
                     <<yLeftBottom<<endl
                    <<xRightTop<<endl
@@ -277,21 +295,14 @@ int Read_pb()
             ss << confidence;
             cv::String conf(ss.str());
 
-            Rect object((int)xLeftBottom, (int)yLeftBottom,
-                (int)(xRightTop - xLeftBottom),
-                (int)(yRightTop - yLeftBottom));
-
+            Rect object((int)xLeftBottom, (int)yLeftBottom, (int)(xRightTop - xLeftBottom), (int)(yRightTop - yLeftBottom));
             rectangle(frame, object, Scalar(0, 255, 0),2);
-            //rectangle(frame,cv::Point(xLeftBottom,yLeftBottom),Point(xRightTop - xLeftBottom,yRightTop - yLeftBottom),Scalar(255,0,0),1,1,0);
-            String label = String(classNames[(objectClass-1)]) + ": " + conf;
-            std::cout<<"className:"<<label<<endl;
+            String label = String(classNames[objectClass]) + ": " + conf;
+            std::cout<<label<<std::endl;
             int baseLine = 0;
             cv::Size labelSize = getTextSize(label, FONT_HERSHEY_SIMPLEX, 0.5, 1, &baseLine);
-            rectangle(frame, cv::Rect(cv::Point(xLeftBottom, yLeftBottom - labelSize.height),
-                cv::Size(labelSize.width, labelSize.height + baseLine)),
-                Scalar(0, 255, 0), CV_FILLED);
-            putText(frame, label, Point(xLeftBottom, yLeftBottom),
-                FONT_HERSHEY_SIMPLEX, 0.5, Scalar(0, 0, 0));
+            rectangle(frame, cv::Rect(Point(xLeftBottom, yLeftBottom - labelSize.height), cv::Size(labelSize.width, labelSize.height + baseLine)), Scalar(0, 255, 0), CV_FILLED);
+            putText(frame, label, cv::Point(xLeftBottom, yLeftBottom), FONT_HERSHEY_SIMPLEX, 0.5, Scalar(0, 0, 0));
         }
     }
 
