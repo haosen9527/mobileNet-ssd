@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE QtCreatorProject>
-<!-- Written by QtCreator 4.4.1, 2019-04-22T08:51:53. -->
+<!-- Written by QtCreator 4.4.1, 2019-04-25T09:11:02. -->
 <qtcreator>
  <data>
   <variable>EnvironmentId</variable>
@@ -102,10 +102,21 @@
     <value type="int" key="ProjectExplorer.BuildConfiguration.BuildStepListCount">2</value>
     <value type="bool" key="ProjectExplorer.BuildConfiguration.ClearSystemEnvironment">false</value>
     <valuelist type="QVariantList" key="ProjectExplorer.BuildConfiguration.UserEnvironmentChanges">
-     <value type="QString">OLDPWD</value>
+     <value type="QString">CMAKE_PREFIX_PATH=/home/micros/QT_pro/gitpro/mobileNet-ssd/devel:/opt/ros/kinetic</value>
+     <value type="QString">LD_LIBRARY_PATH=/home/micros/QT_pro/gitpro/mobileNet-ssd/devel/lib:/opt/ros/kinetic/lib:/opt/ros/kinetic/lib/x86_64-linux-gnu</value>
      <value type="QString">PATH=/opt/ros/kinetic/bin:/home/micros/bin:/home/micros/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin:/usr/lib/jvm/java-8-oracle/bin:/usr/lib/jvm/java-8-oracle/db/bin:/usr/lib/jvm/java-8-oracle/jre/bin</value>
+     <value type="QString">PKG_CONFIG_PATH=/home/micros/QT_pro/gitpro/mobileNet-ssd/devel/lib/pkgconfig:/opt/ros/kinetic/lib/pkgconfig:/opt/ros/kinetic/lib/x86_64-linux-gnu/pkgconfig</value>
+     <value type="QString">PWD=/home/micros/QT_pro/gitpro/mobileNet-ssd</value>
+     <value type="QString">PYTHONPATH=/opt/ros/kinetic/lib/python2.7/dist-packages</value>
      <value type="QString">QTDIR</value>
-     <value type="QString">SHLVL=3</value>
+     <value type="QString">ROSLISP_PACKAGE_DIRECTORIES=/home/micros/QT_pro/gitpro/mobileNet-ssd/devel/share/common-lisp</value>
+     <value type="QString">ROS_DISTRO=kinetic</value>
+     <value type="QString">ROS_ETC_DIR=/opt/ros/kinetic/etc/ros</value>
+     <value type="QString">ROS_MASTER_URI=http://localhost:11311</value>
+     <value type="QString">ROS_PACKAGE_PATH=/home/micros/QT_pro/gitpro/mobileNet-ssd/src:/opt/ros/kinetic/share</value>
+     <value type="QString">ROS_ROOT=/opt/ros/kinetic/share/ros</value>
+     <value type="QString">ROS_VERSION=1</value>
+     <value type="QString">SHLVL=2</value>
      <value type="QString">TERM=xterm</value>
      <value type="QString">_=/usr/bin/env</value>
     </valuelist>

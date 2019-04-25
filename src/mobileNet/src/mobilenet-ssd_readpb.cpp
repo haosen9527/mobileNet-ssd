@@ -51,16 +51,16 @@ const size_t inWidth = 300;
 const size_t inHeight = 300;
 const float WHRatio = inWidth / (float)inHeight;
 const vector<string > classNames = { "background",
-                             "person",
-                             "bicycle", "car", "motorcycle", "airplane", "bus", "train", "truck", "boat", "traffic light", "fire hydrant", "stop sign", "parking meter", "bench", "bird", "cat",
-                             "dog", "horse", "sheep", "cow", "elephant", "bear", "zebra", "giraffe", "backpack", "umbrella", "handbag", "tie", "suitcase", "frisbee", "skis",
-                             "snowboard", "sports ball", "kite", "baseball bat", "baseball glove", "skateboard", "surfboard", "tennis racket", "bottle", "wine glass", "cup", "fork", "knife", "spoon", "bowl",
-                             "banana", "apple", "sandwich", "orange", "broccoli", "carrot", "hot dog", "pizza", "donut", "cake", "chair", "couch", "potted plant", "bed", "dining table",
-                             "toilet", "tv", "laptop", "mouse", "remote", "keyboard", "cell phone", "microwave", "oven", "toaster", "sink", "refrigerator", "book", "clock", "vase",
-                             "scissors", "teddy bear", "hair drier", "toothbrush"};
+                                     "person",
+                                     "bicycle", "car", "motorcycle", "airplane", "bus", "train", "truck", "boat", "traffic light", "fire hydrant", "stop sign", "parking meter", "bench", "bird", "cat",
+                                     "dog", "horse", "sheep", "cow", "elephant", "bear", "zebra", "giraffe", "backpack", "umbrella", "handbag", "tie", "suitcase", "frisbee", "skis",
+                                     "snowboard", "sports ball", "kite", "baseball bat", "baseball glove", "skateboard", "surfboard", "tennis racket", "bottle", "wine glass", "cup", "fork", "knife", "spoon", "bowl",
+                                     "banana", "apple", "sandwich", "orange", "broccoli", "carrot", "hot dog", "pizza", "donut", "cake", "chair", "couch", "potted plant", "bed", "dining table",
+                                     "toilet", "tv", "laptop", "mouse", "remote", "keyboard", "cell phone", "microwave", "oven", "toaster", "sink", "refrigerator", "book", "clock", "vase",
+                                     "scissors", "teddy bear", "hair drier", "toothbrush"};
 
 string MODEL_PATH  = "/home/micros/ImageTool/src/opencv-tf-mssd/data/frozen_inference_graph.pb";
-string Image_path ="/home/micros/catkin_ws/src/faster_rcnn_tf/data/demo/000000565624.jpg";
+string Image_path ="/home/micros/catkin_ssd/image/000000564336.jpg";
 
 //从文件名中读取数据
 Status ReadTensorFromImageFile(string file_name, const int input_height,
@@ -86,10 +86,10 @@ Status ReadTensorFromImageFile(string file_name, const int input_height,
     auto dims_expander = ExpandDims(root, float_caster, 0);
     auto resized = ResizeBilinear(root, dims_expander,Const(root.WithOpName("resize"), {input_height, input_width}));
 
-//    float input_mean = 0;
-//    float input_std = 1;
-//    auto norm= Div(root.WithOpName("norm"), Sub(root, resized, {input_mean}),
-//          {input_std});
+    //    float input_mean = 0;
+    //    float input_std = 1;
+    //    auto norm= Div(root.WithOpName("norm"), Sub(root, resized, {input_mean}),
+    //          {input_std});
 
     Transpose(root.WithOpName("transpose"),resized,{0,1,2,3});
 
@@ -126,22 +126,23 @@ tensorflow::Tensor opencv_read_image()
 
     //std::cout<<"*******reader ok**********"<<std::endl;
 
-//    tensorflow::Tensor return_image_tensor = tensorflow::Tensor(DT_UINT8,image_shape);
+    /*
+    tensorflow::Tensor return_image_tensor = tensorflow::Tensor(DT_UINT8,image_shape);
 
-//    auto temp = image_tensor.tensor<float,4>();
-//    auto return_temp = return_image_tensor.tensor<uint8,4>();
-//    for(int i=0; i < image_tensor.dim_size(1);i++)
-//    {
-//        for(int j=0;j < image_tensor.dim_size(2);j++)
-//        {
-//            for(int k=0;k< image_tensor.dim_size(3);k++)
-//            {
-//                return_temp(0,i,j,k) = (uint8)temp(0,i,j,k);
-//            }
-//        }
-//    }
+    auto temp = image_tensor.tensor<float,4>();
+    auto return_temp = return_image_tensor.tensor<uint8,4>();
+    for(int i=0; i < image_tensor.dim_size(1);i++)
+    {
+        for(int j=0;j < image_tensor.dim_size(2);j++)
+        {
+            for(int k=0;k< image_tensor.dim_size(3);k++)
+            {
+                return_temp(0,i,j,k) = (uint8)temp(0,i,j,k);
+            }
+        }
+    }
 
-    //return return_image_tensor;
+    return return_image_tensor;*/
     return image_tensor;
 }
 
@@ -175,26 +176,12 @@ int Read_pb()
     ReadTensorFromImageFile(Image_path,inWidth,inHeight,&inputs_list);
     Tensor inputs = inputs_list[0];
 
-//    if (!ReadTensorFromImageFile(Image_path, input_height, input_width,&inputs).ok()) {
-//        cout<<"Read image file failed"<<endl;
-//        return -1;
-//    }
-
     // 导入模型参数
     Tensor checkpointPathTensor(DT_STRING, TensorShape());
     checkpointPathTensor.scalar<std::string>()() = std::string("/home/haosen/gitPro/catkin_new/data/ssd_mobilenet_v1_ppn_shared_box_predictor_300x300_coco14_sync_2018_07_03/");
 
-//    for(int i=0;i<graph_def.node_size();i++)
-//    {
-//        std::cout<<graph_def.node().Get(i).DebugString()<<std::endl;
-//    }
-//    status = session->Run(
-//    {{ graph_def.saver_def().filename_tensor_name(), checkpointPathTensor },},
-//    {},
-//    {graph_def.saver_def().restore_op_name()},
-//    nullptr);
     if (!status.ok()) {
-    throw runtime_error("Error loading checkpoint: " + status.ToString());
+        throw runtime_error("Error loading checkpoint: " + status.ToString());
     }
 
     vector<Tensor> outputs;
@@ -217,24 +204,24 @@ int Read_pb()
     //得到模型运行结果
     std::cout<<"detection_classes:"<<outputs[0].DebugString()<<endl
             <<outputs[0].tensor<float,2>()<<endl
-           <<"num_detections"<<outputs[3].DebugString()<<endl
-             <<outputs[3].tensor<float,1>()<<endl
-           <<"detection_scores:"<<outputs[1].DebugString()<<std::endl
-             <<outputs[1].tensor<float,2>()<<endl
-           <<"detection_boxes:"<<outputs[2].DebugString()<<endl;
+                                         <<"num_detections"<<outputs[3].DebugString()<<endl
+                                        <<outputs[3].tensor<float,1>()<<endl
+                                                                     <<"detection_scores:"<<outputs[1].DebugString()<<std::endl
+                                                                    <<outputs[1].tensor<float,2>()<<endl
+                                                                                                 <<"detection_boxes:"<<outputs[2].DebugString()<<endl;
 
     Tensor boxes = Tensor(DT_FLOAT,{100,7});
     auto boxestemp = boxes.tensor<float,2>();
     for(int i=0;i<outputs[0].dim_size(1);i++)
     {
-            boxestemp(i,0) = outputs[3].tensor<float,1>()(i);//num_detections
-            boxestemp(i,1) = outputs[0].tensor<float,2>()(0,i);//detection_classes
-            boxestemp(i,2) = outputs[1].tensor<float,2>()(0,i);//detection_scores
-            std::cout<<"score"<<boxestemp(i,2)<<std::endl;
-            boxestemp(i,3) = outputs[2].tensor<float,3>()(0,i,0);//boxes
-            boxestemp(i,4) = outputs[2].tensor<float,3>()(0,i,1);
-            boxestemp(i,5) = outputs[2].tensor<float,3>()(0,i,2);
-            boxestemp(i,6) = outputs[2].tensor<float,3>()(0,i,3);
+        boxestemp(i,0) = outputs[3].tensor<float,1>()(i);//num_detections
+        boxestemp(i,1) = outputs[0].tensor<float,2>()(0,i);//detection_classes
+        boxestemp(i,2) = outputs[1].tensor<float,2>()(0,i);//detection_scores
+        std::cout<<"score"<<boxestemp(i,2)<<std::endl;
+        boxestemp(i,3) = outputs[2].tensor<float,3>()(0,i,0);//boxes
+        boxestemp(i,4) = outputs[2].tensor<float,3>()(0,i,1);
+        boxestemp(i,5) = outputs[2].tensor<float,3>()(0,i,2);
+        boxestemp(i,6) = outputs[2].tensor<float,3>()(0,i,3);
     }
     std::cout<<boxes.tensor<float,2>()<<std::endl;
 
@@ -246,17 +233,17 @@ int Read_pb()
     if (frame_size.width / (float)frame_size.height > WHRatio)
     {
         cropSize = cv::Size(static_cast<int>(frame_size.height * WHRatio),
-            frame_size.height);
+                            frame_size.height);
     }
     else
     {
         cropSize =cv::Size(frame_size.width,
-            static_cast<int>(frame_size.width / WHRatio));
+                           static_cast<int>(frame_size.width / WHRatio));
     }
 
     cv::Rect crop(cv::Point((frame_size.width - cropSize.width) / 2,
-        (frame_size.height - cropSize.height) / 2),
-        cropSize);
+                            (frame_size.height - cropSize.height) / 2),
+                  cropSize);
 
 
 
