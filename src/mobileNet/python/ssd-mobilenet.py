@@ -97,7 +97,7 @@ def save_object_detection_result():
                 #print(image_np)
                 print(y_min,x_min,y_max,x_max)
                 cv2.rectangle(img,(int(x_min),int(y_min)),(int(x_max),int(y_max)),(0,255,0),2)
-		imgzi = cv2.putText(img, str(final_score[i])+(class_Names[int(classes[0][i])]), (int(x_min), int(y_min)), font, 1.0, (0, 255, 0), 2)
+                imgzi = cv2.putText(img, (class_Names[int(classes[0][i])])+': '+str(final_score[i]), (int(x_min), int(y_min)), font, 0.5, (0, 255, 0), 1,True)
 
     cv2.namedWindow("Image")
     cv2.imshow("Image", imgzi)

@@ -11,8 +11,11 @@ find_package(catkin REQUIRED COMPONENTS
   roscpp
   rospy
 )
-set(OpenCV_DIR /opt/ros/kinetic/include/opencv-3.3.1-dev/opencv2)
-find_package(OpenCV 3.3.1 EXACT REQUIRED)
+#set(OpenCV_DIR /opt/ros/kinetic/include/opencv-3.3.1-dev/opencv2)
+#find_package(OpenCV 3.3.1 EXACT REQUIRED)
+set(OpenCV_DIR /usr/local/opencv341/share/OpenCV)
+## System dependencies are found with CMake's conventions
+find_package(OpenCV 3.4.1 EXACT REQUIRED)
 catkin_package(
   INCLUDE_DIRS include
 #  LIBRARIES mobileNet
@@ -37,7 +40,6 @@ include_directories(
   "~/tensorflow/bazel-genfiles"
   "~/tensorflow/tensorflow/contrib/makefile/gen/protobuf/include"
   "~/tensorflow/tensorflow/contrib/makefile/downloads/nsync/public"
-  "/opt/ros/kinetic/include/opencv-3.3.1-dev"
 )
 link_directories("~/tensorflow/bazel-bin/tensorflow")
 
@@ -86,3 +88,13 @@ target_link_libraries(${PROJECT_NAME}_pb
   ${OpenCV_LIBRARIES}
   ${catkin_LIBRARIES}
 )
+##mobilenet opencv dnn
+add_executable(${PROJECT_NAME}_opencv
+    src/mobilenet-ssd-opencv.cpp
+    )
+target_link_libraries(${PROJECT_NAME}_opencv
+    tensorflow_cc
+    tensorflow_framework
+    ${OpenCV_LIBS}
+    ${catkin_LIBRARIES}
+    )

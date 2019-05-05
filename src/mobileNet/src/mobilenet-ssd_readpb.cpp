@@ -202,13 +202,13 @@ int Read_pb()
     //std::cout<<img.first<<img.second.tensor<float,4>()<<std::endl;
 
     //得到模型运行结果
-    std::cout<<"detection_classes:"<<outputs[0].DebugString()<<endl
-            <<outputs[0].tensor<float,2>()<<endl
-                                         <<"num_detections"<<outputs[3].DebugString()<<endl
-                                        <<outputs[3].tensor<float,1>()<<endl
-                                                                     <<"detection_scores:"<<outputs[1].DebugString()<<std::endl
-                                                                    <<outputs[1].tensor<float,2>()<<endl
-                                                                                                 <<"detection_boxes:"<<outputs[2].DebugString()<<endl;
+//    std::cout<<"detection_classes:"<<outputs[0].DebugString()<<endl
+//            <<outputs[0].tensor<float,2>()<<endl
+//            <<"num_detections"<<outputs[3].DebugString()<<endl
+//            <<outputs[3].tensor<float,1>()<<endl
+//            <<"detection_scores:"<<outputs[1].DebugString()<<std::endl
+//            <<outputs[1].tensor<float,2>()<<endl
+//            <<"detection_boxes:"<<outputs[2].DebugString()<<endl;
 
     Tensor boxes = Tensor(DT_FLOAT,{100,7});
     auto boxestemp = boxes.tensor<float,2>();
@@ -217,46 +217,22 @@ int Read_pb()
         boxestemp(i,0) = outputs[3].tensor<float,1>()(i);//num_detections
         boxestemp(i,1) = outputs[0].tensor<float,2>()(0,i);//detection_classes
         boxestemp(i,2) = outputs[1].tensor<float,2>()(0,i);//detection_scores
-        std::cout<<"score"<<boxestemp(i,2)<<std::endl;
+        //std::cout<<"score"<<boxestemp(i,2)<<std::endl;
         boxestemp(i,3) = outputs[2].tensor<float,3>()(0,i,0);//boxes
         boxestemp(i,4) = outputs[2].tensor<float,3>()(0,i,1);
         boxestemp(i,5) = outputs[2].tensor<float,3>()(0,i,2);
         boxestemp(i,6) = outputs[2].tensor<float,3>()(0,i,3);
     }
-    std::cout<<boxes.tensor<float,2>()<<std::endl;
+    //std::cout<<boxes.tensor<float,2>()<<std::endl;
 
     //show
     cv::Mat frame = cv::imread(Image_path);
-    cv::Size frame_size = frame.size();
-
-    cv::Size cropSize;
-    if (frame_size.width / (float)frame_size.height > WHRatio)
-    {
-        cropSize = cv::Size(static_cast<int>(frame_size.height * WHRatio),
-                            frame_size.height);
-    }
-    else
-    {
-        cropSize =cv::Size(frame_size.width,
-                           static_cast<int>(frame_size.width / WHRatio));
-    }
-
-    cv::Rect crop(cv::Point((frame_size.width - cropSize.width) / 2,
-                            (frame_size.height - cropSize.height) / 2),
-                  cropSize);
-
-
-
-    //frame = frame(crop);
-
-    std::cout<<"frame cols:"<<frame.cols<<endl;
-    std::cout<<"frame rows:"<<frame.rows<<endl;
 
     float confidenceThreshold = 0.50;
     for (int i = 0; i < boxes.dim_size(1); i++)
     {
         float confidence = boxestemp(i, 2);
-        std::cout<<"confidence:"<<confidence<<endl;
+        //std::cout<<"confidence:"<<confidence<<endl;
 
         if (confidence > confidenceThreshold)
         {
@@ -266,17 +242,6 @@ int Read_pb()
             int yLeftBottom = static_cast<int>(boxestemp(i, 3) * frame.rows);
             int xRightTop = static_cast<int>(boxestemp(i, 6) * frame.cols);
             int yRightTop = static_cast<int>(boxestemp(i, 5) * frame.rows);
-
-
-            std::cout<<"boxestemp(i, *) :"<<boxestemp(i, 3)<<endl
-                    <<boxestemp(i, 4)<<endl
-                   <<boxestemp(i, 5)<<endl
-                  <<boxestemp(i, 6)<<endl;
-
-            std::cout<<"x,y,x,y :"<<xLeftBottom<<endl
-                    <<yLeftBottom<<endl
-                   <<xRightTop<<endl
-                  <<yRightTop<<endl;
 
             ostringstream ss;
             ss << confidence;
@@ -295,9 +260,6 @@ int Read_pb()
 
     cv::imshow("image", frame);
     cv::waitKey(0);
-
-
-
 }
 
 int main()
