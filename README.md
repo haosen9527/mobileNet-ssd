@@ -8,13 +8,13 @@ mobileNet-ssd Project
 * Opencv dnn
 ### 对比分析内容
 * 图片输入说明(图片加载)
-* * Tensorflow c++ ：使用tensorflow ops::ReadFile/DecodePng
-* * Tensorflow python ：使用load_image_into_numpy_array(numpy)
-* * Opencv dnn : 使用opencv imread
+ *  Tensorflow c++ ：使用tensorflow ops::ReadFile/DecodePng
+ *  Tensorflow python ：使用load_image_into_numpy_array(numpy)
+ *  Opencv dnn : 使用opencv imread
 ### 时间对比：
-* * Opencvdnn ：detection time: 618.522 ms
-* * Tensorflow c++ ：detection time:699.195 ms
-* * Tensorflow python : detection time : 5916.458 ms
+ *  Opencvdnn ：detection time: 618.522 ms
+ *  Tensorflow c++ ：detection time:699.195 ms
+ *  Tensorflow python : detection time : 5916.458 ms
 ### 效果展示
 * Tensorflow c++
 * ![tensorflow-c++](https://github.com/haosen9527/mobileNet-ssd/blob/master/result-Img/tf-c%2B%2B.png)
