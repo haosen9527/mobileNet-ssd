@@ -1,7 +1,5 @@
 mobileNet-ssd Project
-=====================
-About
---------------------- 
+
 # Welcome to the mobileNet-ssd wiki!
 ## tensorflow模型预测对比总结
 ### 将通过以下的方法进行模型预测部分的实现
@@ -19,9 +17,9 @@ About
 * * Tensorflow python : detection time : 5916.458 ms
 ### 效果展示
 * Tensorflow c++
-[tensorflow-c++](https://github.com/haosen9527/mobileNet-ssd/blob/master/result-Img/tf-c%2B%2B.png)
+ ![tensorflow-c++](https://github.com/haosen9527/mobileNet-ssd/blob/master/result-Img/tf-c%2B%2B.png)
 * Tensorflow python
-[python](https://github.com/haosen9527/mobileNet-ssd/blob/master/result-Img/tf_python.png)
+ ![python](https://github.com/haosen9527/mobileNet-ssd/blob/master/result-Img/tf_python.png)
 * Opencv dnn
-[opencv](https://github.com/haosen9527/mobileNet-ssd/blob/master/result-Img/tf-opencv.png)
+ ![opencv](https://github.com/haosen9527/mobileNet-ssd/blob/master/result-Img/tf-opencv.png)
 
