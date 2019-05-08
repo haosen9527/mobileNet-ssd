@@ -9,6 +9,22 @@
  *  Tensorflow c++ ：使用tensorflow ops::ReadFile/DecodePng
  *  Tensorflow python ：使用load_image_into_numpy_array(numpy)
  *  Opencv dnn : 使用opencv imread
+* 模型加载说明
+ *  Tensorflow c++ ：
+    ```cpp
+    Status status = ReadBinaryProto(Env::Default(),MODEL_PATH,&graph_def);
+    ```
+ *  Tensorflow python:
+    ```python
+    with gfile.FastGFile(PATH_TO_CKPT) as f:
+        graph_def = tf.GraphDef()
+        graph_def.ParseFromString(f.read())
+        sess.graph.as_default()
+        tf.import_graph_def(graph_def,name='')
+    ```
+  *  opencv DNN ：
+    ```c++ 
+    
 ### 时间对比：
  *  Opencvdnn ：detection time: 618.522 ms
  *  Tensorflow c++ ：detection time:699.195 ms
