@@ -5,15 +5,15 @@
 * Opencv dnn
 ### 对比分析内容
 * 图片输入说明(图片加载)
- *  Tensorflow c++ ：使用tensorflow ops::ReadFile/DecodePng
- *  Tensorflow python ：使用load_image_into_numpy_array(numpy)
- *  Opencv dnn : 使用opencv imread
+  *  Tensorflow c++ ：使用tensorflow ops::ReadFile/DecodePng
+  *  Tensorflow python ：使用load_image_into_numpy_array(numpy)
+  *  Opencv dnn : 使用opencv imread
 * 模型加载说明
-  * *  Tensorflow c++ ：
+  *  Tensorflow c++ ：
     ```cpp
     Status status = ReadBinaryProto(Env::Default(),MODEL_PATH,&graph_def);
     ```
-  * * Tensorflow python:
+  * Tensorflow python:
     ```python
     with gfile.FastGFile(PATH_TO_PB) as f:
         graph_def = tf.GraphDef()
@@ -25,10 +25,10 @@
         graph_def = tf.GraphDef()
         .......
     ```
-   * * opencv DNN ：
-       ```c++ 
-       dnn::Net net = cv::dnn::readNetFromTensorflow(weights, prototxt);
-       ```
+   * opencv DNN ：
+     ```cpp 
+     dnn::Net net = cv::dnn::readNetFromTensorflow(weights, prototxt);
+     ```
 ### 时间对比：
  *  Opencvdnn ：detection time: 618.522 ms
  *  Tensorflow c++ ：detection time:699.195 ms
