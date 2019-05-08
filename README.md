@@ -1,4 +1,3 @@
-# Welcome to the mobileNet-ssd wiki!
 ## tensorflow模型预测对比总结
 ### 将通过以下的方法进行模型预测部分的实现
 * Tensorflow c++
@@ -16,15 +15,20 @@
     ```
  *  Tensorflow python:
     ```python
-    with gfile.FastGFile(PATH_TO_CKPT) as f:
+    with gfile.FastGFile(PATH_TO_PB) as f:
         graph_def = tf.GraphDef()
         graph_def.ParseFromString(f.read())
         sess.graph.as_default()
         tf.import_graph_def(graph_def,name='')
+    or 
+    with open(PATH_TO_PB) as f:
+        graph_def = tf.GraphDef()
+        .......
     ```
   *  opencv DNN ：
     ```c++ 
-    
+    dnn::Net net = cv::dnn::readNetFromTensorflow(weights, prototxt);
+    ```
 ### 时间对比：
  *  Opencvdnn ：detection time: 618.522 ms
  *  Tensorflow c++ ：detection time:699.195 ms
