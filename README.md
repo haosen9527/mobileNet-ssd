@@ -5,11 +5,20 @@
 * Opencv dnn
 ### 对比分析内容
 * 图片输入说明(图片加载)
-  *  Tensorflow c++ ：使用tensorflow ops::ReadFile/DecodePng
-  *  Tensorflow python ：使用load_image_into_numpy_array(numpy)
-  *  Opencv dnn : 使用opencv imread
-* 模型加载说明
   *  Tensorflow c++ ：
+     ```cpp
+     tensorflow ops::ReadFile/DecodePng
+     ```
+  *  Tensorflow python ：
+     ```python
+     load_image_into_numpy_array(numpy)
+     ```
+  *  Opencv dnn : 
+     ```cpp
+     cv::imread(imagePath)
+     ```
+* 模型加载说明
+  * Tensorflow c++ ：
     ```cpp
     Status status = ReadBinaryProto(Env::Default(),MODEL_PATH,&graph_def);
     ```
@@ -25,7 +34,7 @@
         graph_def = tf.GraphDef()
         .......
     ```
-   * opencv DNN ：
+  * opencv DNN ：
      ```cpp 
      dnn::Net net = cv::dnn::readNetFromTensorflow(weights, prototxt);
      ```
