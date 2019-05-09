@@ -59,8 +59,8 @@ const vector<string > classNames = { "background",
                                      "toilet", "tv", "laptop", "mouse", "remote", "keyboard", "cell phone", "microwave", "oven", "toaster", "sink", "refrigerator", "book", "clock", "vase",
                                      "scissors", "teddy bear", "hair drier", "toothbrush"};
 
-string MODEL_PATH  = "/home/micros/ImageTool/src/opencv-tf-mssd/data/frozen_inference_graph.pb";
-string Image_path ="/home/micros/catkin_ssd/image/000000564336.jpg";
+string MODEL_PATH  = "./model/frozen_inference_graph.pb";
+string Image_path ="./result-Img/source.jpg";
 
 //从文件名中读取数据
 Status ReadTensorFromImageFile(string file_name, const int input_height,
@@ -199,16 +199,6 @@ int Read_pb()
         cout<<status.ToString()<<endl;
         return -1;
     }
-    //std::cout<<img.first<<img.second.tensor<float,4>()<<std::endl;
-
-    //得到模型运行结果
-//    std::cout<<"detection_classes:"<<outputs[0].DebugString()<<endl
-//            <<outputs[0].tensor<float,2>()<<endl
-//            <<"num_detections"<<outputs[3].DebugString()<<endl
-//            <<outputs[3].tensor<float,1>()<<endl
-//            <<"detection_scores:"<<outputs[1].DebugString()<<std::endl
-//            <<outputs[1].tensor<float,2>()<<endl
-//            <<"detection_boxes:"<<outputs[2].DebugString()<<endl;
 
     Tensor boxes = Tensor(DT_FLOAT,{100,7});
     auto boxestemp = boxes.tensor<float,2>();
@@ -232,8 +222,6 @@ int Read_pb()
     for (int i = 0; i < boxes.dim_size(1); i++)
     {
         float confidence = boxestemp(i, 2);
-        //std::cout<<"confidence:"<<confidence<<endl;
-
         if (confidence > confidenceThreshold)
         {
             size_t objectClass = (size_t)(boxestemp(i, 1));

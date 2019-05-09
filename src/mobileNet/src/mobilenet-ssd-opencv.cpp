@@ -21,11 +21,11 @@ const char* classNames[] = { "background",
 
 int main() {
 
-    String weights = "/home/micros/ImageTool/src/opencv-tf-mssd/data/frozen_inference_graph.pb";
-    String prototxt = "/home/micros/ImageTool/src/opencv-tf-mssd/data/ssd_mobilenet_v1_coco.pbtxt";
+    String weights = "./model/frozen_inference_graph.pb";
+    String prototxt = "./model/ssd_mobilenet_v1_coco.pbtxt";
     dnn::Net net = cv::dnn::readNetFromTensorflow(weights, prototxt);
 
-    Mat frame = cv::imread("/home/micros/catkin_ssd/image/000000564336.jpg");
+    Mat frame = cv::imread("./result-Img/source.jpg");
 
     cv::Mat blob = cv::dnn::blobFromImage(frame,1./255,Size(frame.cols,frame.rows));
     //cout << "blob size: " << blob.size << endl;
