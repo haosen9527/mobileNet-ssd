@@ -1,6 +1,6 @@
 ## ABOUT
 * mobilenet ssd
-* tensorflow/c++/python
+* tensorflow /c++/python
 * catkin_make
 ### INSTALL
 ```shell
@@ -11,10 +11,14 @@
 * tensorflow c++
    ```shell
    rosrun mobileNet mobileNet_pb
+   or
+   ./devel/lib/mobileNet/mobileNet_pb
    ```
 * opencv dnn
    ```shell
    rosrun mobileNet mobileNet_opencv
+   or
+   ./devel/lib/mobileNet/mobileNet_pb
    ```
 * python
   ```shell
