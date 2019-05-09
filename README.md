@@ -1,3 +1,9 @@
+
+[![Build Status](https://github.com/haosen9527/mobileNet-ssd/edit/master/README.md)
+[![Dependencies](https://github.com/haosen9527/mobileNet-ssd/edit/master/README.md)
+[![Code Climate](https://codeclimate.com/github/codeclimate/codeclimate/badges/gpa.svg)](https://codeclimate.com/github/madhums/node-express-mongoose-demo)
+[![Join Gitter Chat](https://img.shields.io/badge/gitter-join%20chat%20%E2%86%92-brightgreen.svg?style=flat)](https://gitter.im/madhums/node-express-mongoose-demo?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+
 ## ABOUT
 * mobilenet ssd
 * tensorflow /c++/python
