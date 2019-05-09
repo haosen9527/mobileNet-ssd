@@ -18,7 +18,7 @@
    ```shell
    rosrun mobileNet mobileNet_opencv
    or
-   ./devel/lib/mobileNet/mobileNet_pb
+   ./devel/lib/mobileNet/mobileNet_opencv
    ```
 * python
   ```shell
