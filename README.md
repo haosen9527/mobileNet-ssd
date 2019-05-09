@@ -1,3 +1,25 @@
+## ABOUT
+* mobilenet ssd
+* tensorflow/c++/python
+* catkin_make
+### INSTALL
+```shell
+ cd mobileNet-ssd
+ catkin_make
+```
+### RUN
+* tensorflow c++
+   ```shell
+   rosrun mobileNet mobileNet_pb
+   ```
+* opencv dnn
+   ```shell
+   rosrun mobileNet mobileNet_opencv
+   ```
+* python
+  ```shell
+  python src/mobileNet/python/ssd-mobilenet.py
+  ```
 ## tensorflow模型预测对比总结
 ### 将通过以下的方法进行模型预测部分的实现
 * Tensorflow c++
