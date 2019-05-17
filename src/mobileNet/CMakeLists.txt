@@ -98,3 +98,32 @@ target_link_libraries(${PROJECT_NAME}_opencv
     ${OpenCV_LIBS}
     ${catkin_LIBRARIES}
     )
+
+
+add_library(${PROJECT_NAME}
+    src/pbtotensorflow.cpp
+)
+
+target_link_libraries(${PROJECT_NAME}
+  tensorflow_cc
+  tensorflow_framework
+  ${OpenCV_LIBRARIES}
+  ${catkin_LIBRARIES}
+)
+
+## mobilenet read PB test
+add_executable(${PROJECT_NAME}_test
+    src/pbtotensorflow.cpp
+    test/apiTest.cpp
+)
+
+target_link_libraries(${PROJECT_NAME}_test
+  tensorflow_cc
+  tensorflow_framework
+  ${OpenCV_LIBRARIES}
+  ${catkin_LIBRARIES}
+)    
+    
+    
+    
+    
