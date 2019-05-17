@@ -100,11 +100,11 @@ target_link_libraries(${PROJECT_NAME}_opencv
     )
 
 
-add_library(${PROJECT_NAME}
+add_library(lib${PROJECT_NAME}
     src/pbtotensorflow.cpp
 )
 
-target_link_libraries(${PROJECT_NAME}
+target_link_libraries(lib${PROJECT_NAME}
   tensorflow_cc
   tensorflow_framework
   ${OpenCV_LIBRARIES}
@@ -112,12 +112,12 @@ target_link_libraries(${PROJECT_NAME}
 )
 
 ## mobilenet read PB test
-add_executable(${PROJECT_NAME}_test
+add_executable(${PROJECT_NAME}_api
     src/pbtotensorflow.cpp
     test/apiTest.cpp
 )
 
-target_link_libraries(${PROJECT_NAME}_test
+target_link_libraries(${PROJECT_NAME}_api
   tensorflow_cc
   tensorflow_framework
   ${OpenCV_LIBRARIES}
