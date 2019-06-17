@@ -33,14 +33,6 @@
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/opencv.hpp>
 
-using namespace std ;
-using namespace tensorflow;
-using tensorflow::Flag;
-using tensorflow::Tensor;
-using tensorflow::Status;
-using tensorflow::string;
-using tensorflow::int32;
-
 using namespace cv;
 using namespace std;
 using namespace tensorflow;
@@ -176,14 +168,11 @@ int Read_pb()
     ReadTensorFromImageFile(Image_path,inWidth,inHeight,&inputs_list);
     Tensor inputs = inputs_list[0];
 
-    // 导入模型参数
-    Tensor checkpointPathTensor(DT_STRING, TensorShape());
-    checkpointPathTensor.scalar<std::string>()() = std::string("/home/haosen/gitPro/catkin_new/data/ssd_mobilenet_v1_ppn_shared_box_predictor_300x300_coco14_sync_2018_07_03/");
-
     if (!status.ok()) {
         throw runtime_error("Error loading checkpoint: " + status.ToString());
     }
 
+    //edit by your project
     vector<Tensor> outputs;
     string input = "ToFloat:0";
     string test1 = "detection_boxes:0";

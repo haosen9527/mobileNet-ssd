@@ -1,2 +1,4 @@
-devel
-build
+/devel
+/build
+*.workspace
+*.workspace.user
