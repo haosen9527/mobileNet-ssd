@@ -88,7 +88,7 @@ void pbToTensorflow:: runPB(string ImagePath)
     string input = "ToFloat:0";
     string test1 = "detection_boxes:0";
     string test2 = "num_detections:0";
-    string output = "detection_classes:0";//graph中的输入节点和输出节点，需要预先知道
+    string output = "detection_classes:0";//graph中的输入节点和输出节点，需要预先知道/show pb
     string output1 = "detection_scores:0";
 
     pair<string,Tensor>img(input,inputs);
